@@ -21,7 +21,15 @@ def get_semantic_bot():
     global _semantic_bot
     if _semantic_bot is None:
         print("🚀 Initializing Semantic Chatbot (first use)...")
-        _semantic_bot = SemanticChatbot()
+        try:
+            _semantic_bot = SemanticChatbot()
+        except Exception as e:
+            print(f"❌ Failed to initialize SemanticChatbot: {e}")
+            raise RuntimeError(
+                f"Chatbot initialization failed: {e}. "
+                "Check that spaCy model (en_core_web_md) and "
+                "sentence-transformers are installed correctly."
+            )
     return _semantic_bot
 
 
@@ -89,8 +97,12 @@ def create_conversation():
         db.session.add(conversation)
         db.session.commit()
         
-        # Reset chatbot context for new conversation
-        get_semantic_bot().reset_conversation()
+        # FIX: Removed get_semantic_bot().reset_conversation() here.
+        # There is nothing to reset on a brand-new empty conversation,
+        # and forcing bot initialization at this point crashes on Render
+        # (OOM or missing model). The bot will initialize lazily on the
+        # first actual message via send_message(), and context is reset
+        # there when the conversation_id changes anyway (see process_message).
         
         return jsonify({
             'success': True,
@@ -170,8 +182,9 @@ def send_message(conversation_id):
         )
         db.session.add(user_message)
         
-        # 2. Process with semantic chatbot
-        ai_response = get_semantic_bot().process_message(
+        # 2. Process with semantic chatbot (lazy init happens here on first message)
+        bot = get_semantic_bot()
+        ai_response = bot.process_message(
             query=user_message_content,
             conversation_id=conversation_id
         )
@@ -207,8 +220,17 @@ def send_message(conversation_id):
             'assistant_message': assistant_message.to_dict(),
             'data': ai_response.get('data'),
             'chart_type': ai_response.get('chart_type'),
-            'understanding': ai_response.get('understanding')  # For debugging
+            'understanding': ai_response.get('understanding')
         })
+        
+    except RuntimeError as e:
+        # Chatbot init failure — return a clear message to the user
+        db.session.rollback()
+        print(f"RuntimeError in send_message: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 503  # 503 Service Unavailable is more accurate than 500 here
         
     except Exception as e:
         db.session.rollback()
@@ -292,8 +314,8 @@ def search_conversations():
 @login_required
 def reset_context(conversation_id):
     """
-    Reset the chatbot context for this conversation
-    Useful when user wants to start fresh topic
+    Reset the chatbot context for this conversation.
+    Only initializes the bot if it's already running.
     """
     try:
         conversation = Conversation.query.filter_by(
@@ -307,7 +329,10 @@ def reset_context(conversation_id):
                 'error': 'Conversation not found'
             }), 404
         
-        get_semantic_bot().reset_conversation()
+        # Only reset if the bot is already initialized — don't force init just for a reset
+        global _semantic_bot
+        if _semantic_bot is not None:
+            _semantic_bot.reset_conversation()
         
         return jsonify({
             'success': True,
@@ -324,16 +349,29 @@ def reset_context(conversation_id):
 @login_required
 def chatbot_status():
     """
-    Get current chatbot status and context
-    Useful for debugging
+    Get current chatbot status and context.
+    Reports whether the bot has been initialized yet.
     """
     try:
-        bot = get_semantic_bot()
+        global _semantic_bot
+        
+        if _semantic_bot is None:
+            return jsonify({
+                'success': True,
+                'status': {
+                    'model': 'SemanticChatbot',
+                    'initialized': False,
+                    'note': 'Bot will initialize on first message'
+                }
+            })
+        
+        bot = _semantic_bot
         
         return jsonify({
             'success': True,
             'status': {
                 'model': 'SemanticChatbot',
+                'initialized': True,
                 'context': {
                     k: str(v) if not isinstance(v, (dict, list, int, float, bool, type(None))) else v
                     for k, v in bot.context.items()
