@@ -1,0 +1,943 @@
+{
+  "timestamp": "2025-11-23T11:50:31.125780",
+  "summary": {
+    "total_tests": 106,
+    "passed": 104,
+    "failed": 2,
+    "accuracy": 98.11320754716981
+  },
+  "results_by_intent": {
+    "total_expense": {
+      "total": 12,
+      "correct": 11,
+      "accuracy": 91.66666666666666,
+      "queries": [
+        {
+          "query": "What's my total expense?",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 77.70343011075799,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "How much did I spend?",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 67.02174007892609,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Total spending",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 64.02649348432368,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show me all expenses",
+          "expected": "total_expense",
+          "detected": "top_spending",
+          "confidence": 59.53817486763,
+          "correct": false,
+          "error": null
+        },
+        {
+          "query": "How much money have I spent?",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 66.93171381950378,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What's my overall spending?",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 86.36363636363636,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Calculate all my expenses",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 63.522626811807804,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Total",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 45.709164196794674,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "All spending",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 62.61292224580591,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Everything I spent",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 71.36363636363636,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What's my total expense this month?",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 71.2511253898794,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Total spending last month",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 56.09240835363215,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "category_expense": {
+      "total": 14,
+      "correct": 14,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "How much did I spend on food?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 73.78378378378379,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Food expenses",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 47.086971402168274,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show me transportation spending",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 63.329124192933776,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What did I spend on shopping?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 68.05915627930615,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Entertainment costs",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 53.03582059370504,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Groceries spending",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 51.545920839180816,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "How much on healthcare?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 52.355852594246734,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Travel expenses",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 54.34425950050353,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What about utilities?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 72.95829260349272,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Education spending",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 77.56756756756756,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Dining expenses",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 56.501708497872215,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Restaurant spending",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 46.07520150171744,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "How much on groceries last month?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 62.301695217957366,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "This month's food spending",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 49.0374169156358,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "top_spending": {
+      "total": 12,
+      "correct": 12,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "What are my biggest expenses?",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 78.18181818181819,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Top 5 spending areas",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 60.09512847120112,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Where do I spend the most?",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 69.94872158223933,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show me top spending",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 68.8030303066427,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Highest expenses",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 69.69637915943608,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Top categories",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 62.160892540758304,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Major spending areas",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 67.87902723659168,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Largest expenses",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 67.71687791203007,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What costs me the most?",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 56.99470525438135,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Top 3 expenses",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 67.34190648252314,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show top 5",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 64.5529038255865,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Biggest spending",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 79.84848067615971,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "comparison": {
+      "total": 10,
+      "correct": 10,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "Compare this month vs last month",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 83.66856049407612,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "How does this month compare to last month?",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 75.60691600496119,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Is my spending increasing?",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 61.91990852355956,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show month over month change",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 80.40775250304829,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Compare this year with last year",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 65.00573878938502,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Spending difference between months",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 59.51717382127588,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Am I spending more or less?",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 80.00000834465027,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Growth in expenses",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 71.36363636363636,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Compare spending patterns",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 78.412658626383,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "This month versus last month",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 69.95518809015101,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "average_expense": {
+      "total": 8,
+      "correct": 8,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "What's my average spending?",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 78.0,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Average transaction amount",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 68.63222448031107,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Mean expense",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 69.13796869913736,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Typical spending",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 71.99999582767487,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Average daily expense",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 74.66667501131693,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What do I spend on average?",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 74.66666666666666,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Average per transaction",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 74.66667501131693,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Average monthly spending",
+          "expected": "average_expense",
+          "detected": "average_expense",
+          "confidence": 78.0,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "trend": {
+      "total": 8,
+      "correct": 8,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "What's my spending trend?",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 72.74509803921568,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show spending pattern",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 79.7222192731558,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "How is my spending changing?",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 70.0,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Display expense trends",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 72.74509803921568,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Track my spending behavior",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 66.33472502231598,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Spending over time",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 72.74509386689056,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Monthly progression",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 52.43132786423552,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Expense patterns",
+          "expected": "trend",
+          "detected": "trend",
+          "confidence": 58.2267166820227,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "vendor_analysis": {
+      "total": 7,
+      "correct": 7,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "Which vendors do I use most?",
+          "expected": "vendor_analysis",
+          "detected": "vendor_analysis",
+          "confidence": 80.45045045045045,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show me all merchants",
+          "expected": "vendor_analysis",
+          "detected": "vendor_analysis",
+          "confidence": 73.78378378378379,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Where do I shop frequently?",
+          "expected": "vendor_analysis",
+          "detected": "vendor_analysis",
+          "confidence": 83.78379212843404,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Top stores I buy from",
+          "expected": "vendor_analysis",
+          "detected": "vendor_analysis",
+          "confidence": 53.15213250147329,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Favorite vendors",
+          "expected": "vendor_analysis",
+          "detected": "vendor_analysis",
+          "confidence": 73.78378378378379,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Most used merchants",
+          "expected": "vendor_analysis",
+          "detected": "vendor_analysis",
+          "confidence": 73.78377961145866,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Vendor breakdown",
+          "expected": "vendor_analysis",
+          "detected": "vendor_analysis",
+          "confidence": 58.9423392914437,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "payment_method": {
+      "total": 7,
+      "correct": 7,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "How much did I pay by card?",
+          "expected": "payment_method",
+          "detected": "payment_method",
+          "confidence": 83.18181818181817,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show payment method breakdown",
+          "expected": "payment_method",
+          "detected": "payment_method",
+          "confidence": 66.9712908701463,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "UPI payments",
+          "expected": "payment_method",
+          "detected": "payment_method",
+          "confidence": 76.36363636363636,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Cash spending",
+          "expected": "payment_method",
+          "detected": "payment_method",
+          "confidence": 73.18181818181819,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Credit card expenses",
+          "expected": "payment_method",
+          "detected": "payment_method",
+          "confidence": 73.18182652646846,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "How did I pay?",
+          "expected": "payment_method",
+          "detected": "payment_method",
+          "confidence": 80.00000834465027,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Payment methods used",
+          "expected": "payment_method",
+          "detected": "payment_method",
+          "confidence": 61.95943550630049,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "budget_check": {
+      "total": 5,
+      "correct": 5,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "Am I over budget?",
+          "expected": "budget_check",
+          "detected": "budget_check",
+          "confidence": 75.18520187448571,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Budget status",
+          "expected": "budget_check",
+          "detected": "budget_check",
+          "confidence": 75.18518518518518,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "How much budget left?",
+          "expected": "budget_check",
+          "detected": "budget_check",
+          "confidence": 75.18518101286004,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Check my budget",
+          "expected": "budget_check",
+          "detected": "budget_check",
+          "confidence": 75.18518518518518,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Within budget?",
+          "expected": "budget_check",
+          "detected": "budget_check",
+          "confidence": 75.18518518518518,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "tax_query": {
+      "total": 5,
+      "correct": 5,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "How much tax did I pay?",
+          "expected": "tax_query",
+          "detected": "tax_query",
+          "confidence": 75.18518518518518,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What's my GST amount?",
+          "expected": "tax_query",
+          "detected": "tax_query",
+          "confidence": 75.18518518518518,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show tax deductions",
+          "expected": "tax_query",
+          "detected": "tax_query",
+          "confidence": 75.18518518518518,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Total taxes paid",
+          "expected": "tax_query",
+          "detected": "tax_query",
+          "confidence": 75.18519352983544,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Tax breakdown",
+          "expected": "tax_query",
+          "detected": "tax_query",
+          "confidence": 75.18518518518518,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "edge_cases": {
+      "total": 12,
+      "correct": 12,
+      "accuracy": 100.0,
+      "queries": [
+        {
+          "query": "Show me everything",
+          "expected": null,
+          "detected": "top_spending",
+          "confidence": 38.519584238529205,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What's the total?",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 54.92396598512476,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Last month",
+          "expected": null,
+          "detected": "comparison",
+          "confidence": 51.04456365108489,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Food",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 35.986337661743164,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "totl expence",
+          "expected": "total_expense",
+          "detected": "unknown",
+          "confidence": 26.76999270915985,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "how much i spended on food?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 71.57170044409263,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "transporatation cost",
+          "expected": "category_expense",
+          "detected": "unknown",
+          "confidence": 27.21877234207617,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "top spening",
+          "expected": "top_spending",
+          "detected": "unknown",
+          "confidence": 26.242695206945594,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "I want to see how much I spent on food",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 52.85981523024069,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Could you tell me my total expenses?",
+          "expected": "total_expense",
+          "detected": "total_expense",
+          "confidence": 67.3039132898504,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Can you show me where my money goes?",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 52.10347950458526,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What did dining out cost me?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 69.78718506323324,
+          "correct": true,
+          "error": null
+        }
+      ]
+    },
+    "context_tests": {
+      "total": 6,
+      "correct": 5,
+      "accuracy": 83.33333333333334,
+      "queries": [
+        {
+          "query": "How much did I spend on food this month?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 68.40828942286001,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What about last month?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 38.36810271965491,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "And transportation?",
+          "expected": "category_expense",
+          "detected": "category_expense",
+          "confidence": 41.41373800264822,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "Show me top 5 spending areas",
+          "expected": "top_spending",
+          "detected": "top_spending",
+          "confidence": 68.52475290948693,
+          "correct": true,
+          "error": null
+        },
+        {
+          "query": "What about this month only?",
+          "expected": "top_spending",
+          "detected": "comparison",
+          "confidence": 44.794533252716064,
+          "correct": false,
+          "error": null
+        },
+        {
+          "query": "Compare with last month",
+          "expected": "comparison",
+          "detected": "comparison",
+          "confidence": 79.8271102255041,
+          "correct": true,
+          "error": null
+        }
+      ]
+    }
+  }
+}

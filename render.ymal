@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: finance-app
+    env: python
+    region: oregon  # Change to 'singapore' for closer to India
+    plan: free
+    buildCommand: "pip install -r requirements.txt && apt-get update && apt-get install -y tesseract-ocr"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.6
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: TESSERACT_PATH
+        value: /usr/bin/tesseract
+    
+databases:
+  - name: finance-db
+    databaseName: finance_app
+    user: finance_user
+    plan: free

@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Documents - Finance AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="upload-header">
+        <div>
+            <h2>📤 Upload Documents</h2>
+            <p>Upload invoices, receipts, statements, and other financial documents</p>
+        </div>
+        <!-- NEW: Quick Actions -->
+        <div class="header-actions" style="display: flex; gap: 1rem;">
+            <button class="btn-secondary" onclick="window.location.href='/transactions'" title="View all transactions">
+                💰 View Transactions
+            </button>
+            <button class="btn-primary" onclick="window.location.href='/transactions'" title="Add transaction manually">
+                ➕ Add Transaction
+            </button>
+        </div>
+    </div>
+
+    <!-- Upload Stats -->
+    <div class="upload-stats">
+        <div class="stat-item">
+            <div class="stat-number" id="totalDocs">0</div>
+            <div class="stat-label">Total Documents</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="processedDocs">0</div>
+            <div class="stat-label">Processed</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="pendingDocs">0</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        
+    </div>
+
+    <!-- NEW: Info Banner -->
+    <div style="background: #EFF6FF; border-left: 4px solid #3B82F6; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+        <p style="margin: 0; color: #1E40AF;">
+            <strong>💡 Tip:</strong> After uploading documents, click "Process" to extract transactions automatically. 
+            Or <a href="/transactions" style="color: #2563EB; text-decoration: underline;">add transactions manually</a> without uploading documents.
+        </p>
+    </div>
+
+    <!-- Upload Area -->
+    <div class="upload-section">
+        <div class="upload-box" id="uploadBox">
+            <div class="upload-icon">📁</div>
+            <h3>Drag & Drop Files Here</h3>
+            <p>or click to browse</p>
+            <input type="file" id="fileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.gif" hidden>
+            <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                Choose Files
+            </button>
+            <div class="upload-info">
+                <p>Supported formats: PDF, PNG, JPG, JPEG, GIF</p>
+                <p>Maximum file size: 10MB per file</p>
+            </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div class="upload-progress" id="uploadProgress" style="display: none;">
+            <div class="progress-header">
+                <span id="progressText">Uploading...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Selected Files Preview -->
+        <div class="selected-files" id="selectedFiles" style="display: none;">
+            <h3>Selected Files</h3>
+            <div class="files-list" id="filesList"></div>
+            <div class="upload-actions">
+                <button class="btn-primary" onclick="uploadFiles()">
+                    Upload All Files
+                </button>
+                <button class="btn-secondary" onclick="clearSelection()">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Uploaded Documents -->
+    <div class="documents-section">
+        <div class="section-header">
+            <h3>📄 Uploaded Documents</h3>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="processAllDocuments()">
+                    ⚙️ Process All
+                </button>
+                <button class="btn-secondary" onclick="loadDocuments()">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all" onclick="filterDocuments('all')">
+                📋 All Documents
+            </button>
+            <button class="filter-btn" data-filter="invoice" onclick="filterDocuments('invoice')">
+                🧾 Invoices
+            </button>
+            <button class="filter-btn" data-filter="receipt" onclick="filterDocuments('receipt')">
+                🧾 Receipts
+            </button>
+            <button class="filter-btn" data-filter="statement" onclick="filterDocuments('statement')">
+                📊 Statements
+            </button>
+            <button class="filter-btn" data-filter="other" onclick="filterDocuments('other')">
+                📄 Other
+            </button>
+        </div>
+        
+        <div class="documents-grid" id="documentsGrid">
+            <p class="loading">Loading documents...</p>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal" id="previewModal" style="display: none;">
+        <div class="modal-backdrop" onclick="closePreview()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="previewTitle">Document Preview</h3>
+                <button class="modal-close" onclick="closePreview()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent">
+                    <p class="loading">Loading preview...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add CSS for the new header actions -->
+<style>
+    .upload-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .upload-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .header-actions {
+            width: 100%;
+        }
+
+        .header-actions button {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

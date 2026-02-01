@@ -1,0 +1,1067 @@
+{% extends 'base.html' %}
+
+{% block title %}Advanced Insights - Finance AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.insights-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.insights-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.insights-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.75rem;
+    letter-spacing: -1px;
+}
+
+.insights-header p {
+    color: var(--dark-secondary);
+    font-size: 1.1rem;
+}
+
+.insights-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--glass-border);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.insights-tabs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.insights-tabs::-webkit-scrollbar-thumb {
+    background: var(--sand);
+    border-radius: 3px;
+}
+
+.tab-button {
+    padding: 1rem 1.5rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--dark-secondary);
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    position: relative;
+}
+
+.tab-button:hover {
+    color: var(--primary-color);
+    background: rgba(78, 205, 196, 0.05);
+}
+
+.tab-button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.insight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.insight-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    padding: 1.75rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.insight-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.card-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0.75rem 0;
+    letter-spacing: -1px;
+}
+
+.card-description {
+    font-size: 0.9rem;
+    color: var(--dark-secondary);
+    line-height: 1.6;
+}
+
+.pattern-list {
+    list-style: none;
+    padding: 0;
+}
+
+.pattern-item {
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    background: white;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+}
+
+.pattern-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-md);
+}
+
+.pattern-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.pattern-name {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.pattern-value {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.anomaly-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-color);
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s;
+}
+
+.anomaly-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.anomaly-card.medium {
+    border-left-color: var(--warning-color);
+}
+
+.anomaly-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.anomaly-severity {
+    padding: 0.3rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.severity-high {
+    background: rgba(255, 107, 107, 0.15);
+    color: #CC5555;
+    border: 1px solid var(--accent-color);
+}
+
+.severity-medium {
+    background: rgba(244, 229, 184, 0.15);
+    color: #8B7A3F;
+    border: 1px solid var(--warning-color);
+}
+
+.anomaly-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 0.8rem;
+    color: var(--dark-secondary);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+}
+
+.detail-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.recommendation-card {
+    background: var(--primary-color);
+    color: white;
+    padding: 1.75rem;
+    border-radius: 16px;
+    margin: 1rem 0;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.recommendation-card.critical {
+    background: var(--accent-color);
+}
+
+.recommendation-card.high {
+    background: var(--warning-color);
+    color: #8B7A3F;
+}
+
+.recommendation-card.medium {
+    background: var(--secondary-color);
+}
+
+.rec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.rec-priority {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 0.3rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.rec-savings {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0.75rem 0;
+    letter-spacing: -0.5px;
+}
+
+.forecast-chart {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    padding: 1.75rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.forecast-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin: 0.75rem 0;
+    background: white;
+    border-radius: 12px;
+    border-left: 3px solid var(--primary-color);
+    transition: all 0.3s;
+}
+
+.forecast-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-sm);
+}
+
+.forecast-month {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.forecast-amount {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.forecast-range {
+    font-size: 0.8rem;
+    color: var(--dark-secondary);
+    margin-top: 0.25rem;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 4rem;
+    font-size: 3rem;
+    color: var(--primary-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--dark-secondary);
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    color: var(--dark-secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.control-group label {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+}
+
+.control-group select {
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--glass-border);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    color: var(--dark);
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.control-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.trend-increasing {
+    background: rgba(255, 107, 107, 0.15);
+    color: #CC5555;
+    border: 1px solid var(--accent-color);
+}
+
+.trend-decreasing {
+    background: rgba(156, 175, 136, 0.15);
+    color: var(--dark-secondary);
+    border: 1px solid var(--secondary-color);
+}
+
+.trend-stable {
+    background: rgba(78, 205, 196, 0.1);
+    color: #2C7A74;
+    border: 1px solid var(--primary-color);
+}
+
+/* Insights Stats Overview */
+.insights-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--dark-secondary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: -1px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .insights-container {
+        padding: 1rem;
+    }
+
+    .insights-header h1 {
+        font-size: 2rem;
+    }
+
+    .insight-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .insights-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .card-value {
+        font-size: 1.75rem;
+    }
+
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .control-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .control-group select {
+        width: 100%;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .anomaly-details {
+        grid-template-columns: 1fr;
+    }
+
+    .insights-tabs {
+        gap: 0.25rem;
+    }
+
+    .tab-button {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="insights-container">
+    <div class="insights-header">
+        <h1>🧠 Advanced Insights</h1>
+        <p>AI-powered financial analytics and predictions</p>
+    </div>
+
+    <div class="insights-tabs">
+        <button class="tab-button active" onclick="switchTab('overview')">📊 Overview</button>
+        <button class="tab-button" onclick="switchTab('patterns')">🔍 Patterns</button>
+        <button class="tab-button" onclick="switchTab('anomalies')">⚠️ Anomalies</button>
+        <button class="tab-button" onclick="switchTab('forecast')">📈 Forecast</button>
+        <button class="tab-button" onclick="switchTab('recommendations')">💡 Recommendations</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="overview-tab" class="tab-content active">
+        <div id="overviewLoading" class="loading-spinner">⏳</div>
+        <div id="overviewContent" style="display:none;"></div>
+    </div>
+
+    <!-- Patterns Tab -->
+    <div id="patterns-tab" class="tab-content">
+        <div class="controls">
+            <div class="control-group">
+                <label>Analysis Period:</label>
+                <select id="patternsMonths">
+                    <option value="3">3 Months</option>
+                    <option value="6" selected>6 Months</option>
+                    <option value="12">12 Months</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="loadPatterns()">🔄 Refresh</button>
+        </div>
+        <div id="patternsContent"></div>
+    </div>
+
+    <!-- Anomalies Tab -->
+    <div id="anomalies-tab" class="tab-content">
+        <div class="controls">
+            <div class="control-group">
+                <label>Sensitivity:</label>
+                <select id="anomalySensitivity">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="loadAnomalies()">🔄 Refresh</button>
+        </div>
+        <div id="anomaliesContent"></div>
+    </div>
+
+    <!-- Forecast Tab -->
+    <div id="forecast-tab" class="tab-content">
+        <div class="controls">
+            <div class="control-group">
+                <label>Category:</label>
+                <select id="forecastCategory">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Months:</label>
+                <select id="forecastMonths">
+                    <option value="3" selected>3 Months</option>
+                    <option value="6">6 Months</option>
+                    <option value="12">12 Months</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="loadForecast()">🔄 Refresh</button>
+        </div>
+        <div id="forecastContent"></div>
+    </div>
+
+    <!-- Recommendations Tab -->
+    <div id="recommendations-tab" class="tab-content">
+        <button class="btn btn-primary" onclick="loadRecommendations()" style="margin-bottom: 20px;">🔄 Refresh</button>
+        <div id="recommendationsContent"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentTab = 'overview';
+let categories = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategories();
+    loadOverview();
+});
+
+function switchTab(tab) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+    
+    // Show selected tab
+    document.getElementById(`${tab}-tab`).classList.add('active');
+    event.target.classList.add('active');
+    
+    currentTab = tab;
+    
+    // Load data if not already loaded
+    if (tab === 'patterns' && !document.getElementById('patternsContent').innerHTML) {
+        loadPatterns();
+    } else if (tab === 'anomalies' && !document.getElementById('anomaliesContent').innerHTML) {
+        loadAnomalies();
+    } else if (tab === 'forecast' && !document.getElementById('forecastContent').innerHTML) {
+        loadForecast();
+    } else if (tab === 'recommendations' && !document.getElementById('recommendationsContent').innerHTML) {
+        loadRecommendations();
+    }
+}
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        categories = data;
+        
+        const select = document.getElementById('forecastCategory');
+        data.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = `${cat.icon} ${cat.name}`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+async function loadOverview() {
+    try {
+        document.getElementById('overviewLoading').style.display = 'block';
+        document.getElementById('overviewContent').style.display = 'none';
+        
+        const response = await fetch('/api/insights/dashboard');
+        const data = await response.json();
+        
+        if (data.success) {
+            renderOverview(data.dashboard);
+        } else {
+            showError('overviewContent', 'Failed to load insights');
+        }
+    } catch (error) {
+        console.error('Error loading overview:', error);
+        showError('overviewContent', 'Error loading insights');
+    } finally {
+        document.getElementById('overviewLoading').style.display = 'none';
+    }
+}
+
+function renderOverview(dashboard) {
+    const content = document.getElementById('overviewContent');
+    
+    let html = '<div class="insight-grid">';
+    
+    // Patterns summary
+    if (dashboard.patterns && dashboard.patterns.status === 'success') {
+        html += `
+            <div class="insight-card">
+                <div class="card-header">
+                    <span class="card-icon">🔍</span>
+                    <span class="card-title">Spending Patterns</span>
+                </div>
+                <div class="card-value">${dashboard.patterns.patterns.length}</div>
+                <div class="card-description">
+                    Identified patterns across ${dashboard.patterns.total_transactions} transactions
+                </div>
+            </div>
+        `;
+    }
+    
+    // Anomalies summary
+    if (dashboard.anomalies && dashboard.anomalies.status === 'success') {
+        html += `
+            <div class="insight-card">
+                <div class="card-header">
+                    <span class="card-icon">⚠️</span>
+                    <span class="card-title">Anomalies Detected</span>
+                </div>
+                <div class="card-value" style="color: #ff5252;">${dashboard.anomalies.anomaly_count}</div>
+                <div class="card-description">
+                    Unusual transactions flagged for review
+                </div>
+            </div>
+        `;
+    }
+    
+    // Forecast summary
+    if (dashboard.forecast && dashboard.forecast.status === 'success') {
+        html += `
+            <div class="insight-card">
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <span class="card-title">Spending Trend</span>
+                </div>
+                <div class="card-value">
+                    <span class="trend-indicator trend-${dashboard.forecast.trend}">
+                        ${dashboard.forecast.trend === 'increasing' ? '📈' : dashboard.forecast.trend === 'decreasing' ? '📉' : '➡️'}
+                        ${dashboard.forecast.trend}
+                    </span>
+                </div>
+                <div class="card-description">
+                    ${dashboard.forecast.trend_percentage > 0 ? '+' : ''}${dashboard.forecast.trend_percentage}% from average
+                </div>
+            </div>
+        `;
+    }
+    
+    // Recommendations summary
+    if (dashboard.recommendations && dashboard.recommendations.status === 'success') {
+        html += `
+            <div class="insight-card">
+                <div class="card-header">
+                    <span class="card-icon">💡</span>
+                    <span class="card-title">Recommendations</span>
+                </div>
+                <div class="card-value">${dashboard.recommendations.recommendation_count}</div>
+                <div class="card-description">
+                    Actionable insights to improve your finances
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+    content.style.display = 'block';
+}
+
+async function loadPatterns() {
+    const months = document.getElementById('patternsMonths').value;
+    const content = document.getElementById('patternsContent');
+    
+    content.innerHTML = '<div class="loading-spinner">⏳</div>';
+    
+    try {
+        const response = await fetch(`/api/insights/patterns?months=${months}`);
+        const data = await response.json();
+        
+        if (data.success && data.data.status === 'success') {
+            renderPatterns(data.data);
+        } else {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📊</div>
+                    <h3>${data.data.message || 'No patterns found'}</h3>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading patterns:', error);
+        content.innerHTML = '<div class="empty-state"><h3>Error loading patterns</h3></div>';
+    }
+}
+
+function renderPatterns(data) {
+    const content = document.getElementById('patternsContent');
+    
+    let html = `
+        <div class="insight-card">
+            <h3>Identified ${data.patterns.length} Spending Patterns</h3>
+            <p>Analyzed ${data.total_transactions} transactions over ${data.analysis_period_months} months</p>
+            <ul class="pattern-list">
+    `;
+    
+    data.patterns.forEach(pattern => {
+        html += `
+            <li class="pattern-item">
+                <div class="pattern-header">
+                    <span class="pattern-name">Pattern ${pattern.pattern_id}: ${pattern.dominant_category}</span>
+                    <span class="pattern-value">₹${pattern.avg_amount.toLocaleString()}</span>
+                </div>
+                <div class="card-description">
+                    ${pattern.transaction_count} transactions (${pattern.frequency.toFixed(1)}% of total)
+                    <br>Average amount: ₹${pattern.avg_amount}
+                </div>
+            </li>
+        `;
+    });
+    
+    html += '</ul></div>';
+    content.innerHTML = html;
+}
+
+async function loadAnomalies() {
+    const sensitivity = document.getElementById('anomalySensitivity').value;
+    const content = document.getElementById('anomaliesContent');
+    
+    content.innerHTML = '<div class="loading-spinner">⏳</div>';
+    
+    try {
+        const response = await fetch(`/api/insights/anomalies?sensitivity=${sensitivity}`);
+        const data = await response.json();
+        
+        if (data.success && data.data.status === 'success') {
+            renderAnomalies(data.data);
+        } else {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">✅</div>
+                    <h3>${data.data.message || 'No anomalies detected'}</h3>
+                    <p>Your transactions look normal!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading anomalies:', error);
+        content.innerHTML = '<div class="empty-state"><h3>Error loading anomalies</h3></div>';
+    }
+}
+
+function renderAnomalies(data) {
+    const content = document.getElementById('anomaliesContent');
+    
+    let html = `<h3>⚠️ ${data.anomaly_count} Anomalies Detected</h3>`;
+    
+    data.anomalies.forEach(anomaly => {
+        html += `
+            <div class="anomaly-card ${anomaly.severity}">
+                <div class="anomaly-header">
+                    <div>
+                        <h4>${anomaly.vendor || 'Unknown Vendor'}</h4>
+                        <span style="color: #666;">${anomaly.date}</span>
+                    </div>
+                    <span class="anomaly-severity severity-${anomaly.severity}">${anomaly.severity}</span>
+                </div>
+                <div class="anomaly-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Amount</span>
+                        <span class="detail-value">₹${anomaly.amount.toLocaleString()}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Category</span>
+                        <span class="detail-value">${anomaly.category}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Anomaly Score</span>
+                        <span class="detail-value">${anomaly.anomaly_score}</span>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>Reasons:</strong>
+                    <ul style="margin: 5px 0 0 20px;">
+                        ${anomaly.reasons.map(r => `<li>${r}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    });
+    
+    content.innerHTML = html;
+}
+
+async function loadForecast() {
+    const categoryId = document.getElementById('forecastCategory').value;
+    const months = document.getElementById('forecastMonths').value;
+    const content = document.getElementById('forecastContent');
+    
+    content.innerHTML = '<div class="loading-spinner">⏳</div>';
+    
+    try {
+        const url = categoryId 
+            ? `/api/insights/forecast?category_id=${categoryId}&months=${months}`
+            : `/api/insights/forecast?months=${months}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success && data.data.status === 'success') {
+            renderForecast(data.data);
+        } else {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📈</div>
+                    <h3>${data.data.message || 'Insufficient data for forecast'}</h3>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading forecast:', error);
+        content.innerHTML = '<div class="empty-state"><h3>Error loading forecast</h3></div>';
+    }
+}
+
+function renderForecast(data) {
+    const content = document.getElementById('forecastContent');
+    
+    let html = `
+        <div class="forecast-chart">
+            <h3>📈 Spending Forecast: ${data.category}</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+                <div class="insight-card">
+                    <div class="card-title">Historical Average</div>
+                    <div class="card-value" style="font-size: 24px;">₹${data.historical_average.toLocaleString()}</div>
+                </div>
+                <div class="insight-card">
+                    <div class="card-title">Trend</div>
+                    <div class="card-value" style="font-size: 24px;">
+                        <span class="trend-indicator trend-${data.trend}">
+                            ${data.trend === 'increasing' ? '📈' : data.trend === 'decreasing' ? '📉' : '➡️'}
+                            ${data.trend}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <h4>Predictions</h4>
+    `;
+    
+    data.forecasts.forEach(forecast => {
+        html += `
+            <div class="forecast-item">
+                <div>
+                    <div class="forecast-month">${forecast.month}</div>
+                    <div class="forecast-range">Range: ₹${forecast.lower_bound.toLocaleString()} - ₹${forecast.upper_bound.toLocaleString()}</div>
+                </div>
+                <div class="forecast-amount">₹${forecast.predicted_amount.toLocaleString()}</div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+async function loadRecommendations() {
+    const content = document.getElementById('recommendationsContent');
+    
+    content.innerHTML = '<div class="loading-spinner">⏳</div>';
+    
+    try {
+        const response = await fetch('/api/insights/recommendations');
+        const data = await response.json();
+        
+        if (data.success && data.data.status === 'success') {
+            renderRecommendations(data.data);
+        } else {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">💡</div>
+                    <h3>${data.data.message || 'No recommendations available'}</h3>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading recommendations:', error);
+        content.innerHTML = '<div class="empty-state"><h3>Error loading recommendations</h3></div>';
+    }
+}
+
+function renderRecommendations(data) {
+    const content = document.getElementById('recommendationsContent');
+    
+    let html = `<h3>💡 ${data.recommendation_count} Smart Recommendations</h3>`;
+    
+    data.recommendations.forEach(rec => {
+        html += `
+            <div class="recommendation-card ${rec.priority}">
+                <div class="rec-header">
+                    <h4>${rec.category}</h4>
+                    <span class="rec-priority">${rec.priority}</span>
+                </div>
+                <div style="font-size: 18px; margin: 10px 0;">
+                    ${rec.message}
+                </div>
+                ${rec.potential_savings ? `
+                    <div class="rec-savings">
+                        💰 Potential Savings: ₹${rec.potential_savings.toLocaleString()}/month
+                    </div>
+                ` : ''}
+                <div style="margin-top: 15px; opacity: 0.9;">
+                    <strong>Suggestion:</strong> ${rec.suggestion}
+                </div>
+            </div>
+        `;
+    });
+    
+    content.innerHTML = html;
+}
+
+function showError(elementId, message) {
+    document.getElementById(elementId).innerHTML = `
+        <div class="empty-state">
+            <div class="empty-state-icon">❌</div>
+            <h3>${message}</h3>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

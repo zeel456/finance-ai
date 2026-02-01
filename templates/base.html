@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Finance AI Assistant - Enterprise Financial Management{% endblock %}</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="description" content="Enterprise-grade financial management and analytics platform">
+    <meta name="author" content="Finance AI Assistant">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <!-- Enterprise Notification System -->
+    <style>
+        /* ========== NOTIFICATION BELL ========== */
+        .notification-bell-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: var(--neutral-100);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+        }
+
+        .notification-bell-container:hover {
+            background: var(--neutral-200);
+            border-color: var(--border-primary);
+        }
+
+        .notification-bell {
+            color: var(--neutral-700);
+        }
+
+        .notification-bell svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--error);
+            color: white;
+            font-size: 0.625rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            border: 2px solid var(--surface-primary);
+            box-shadow: var(--elevation-2);
+        }
+
+        .notification-badge.hide {
+            display: none;
+        }
+
+        /* ========== LOGO STYLING ========== */
+        .nav-brand-logo-img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        /* ========== TOAST NOTIFICATIONS ========== */
+        .toast-container {
+            position: fixed;
+            bottom: var(--space-6);
+            right: var(--space-6);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--surface-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            box-shadow: var(--elevation-5);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-3);
+            min-width: 380px;
+            max-width: 440px;
+            transform: translateX(500px);
+            opacity: 0;
+            transition: all var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: all;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .toast-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--success);
+        }
+
+        .toast.success .toast-icon { color: var(--success); }
+
+        .toast.warning {
+            border-left: 3px solid var(--warning);
+        }
+
+        .toast.warning .toast-icon { color: var(--warning); }
+
+        .toast.danger {
+            border-left: 3px solid var(--error);
+        }
+
+        .toast.danger .toast-icon { color: var(--error); }
+
+        .toast.info {
+            border-left: 3px solid var(--info);
+        }
+
+        .toast.info .toast-icon { color: var(--info); }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: 4px;
+            font-size: 0.9375rem;
+        }
+
+        .toast-message {
+            font-size: 0.875rem;
+            color: var(--neutral-600);
+            line-height: 1.5;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--neutral-400);
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            transition: color var(--transition-fast);
+            margin-top: 2px;
+        }
+
+        .toast-close:hover {
+            color: var(--neutral-700);
+        }
+
+        .toast-close svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ========== MINI NOTIFICATION POPUP ========== */
+        .mini-notification {
+            position: fixed;
+            top: 88px;
+            right: var(--space-6);
+            background: var(--surface-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--elevation-5);
+            padding: var(--space-5);
+            max-width: 400px;
+            z-index: 9999;
+            transform: translateX(500px);
+            opacity: 0;
+            transition: all var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: all;
+        }
+
+        .mini-notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .mini-notification::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+        }
+
+        .mini-notification.info::before { background: var(--info); }
+        .mini-notification.danger::before { background: var(--error); }
+        .mini-notification.warning::before { background: var(--warning); }
+        .mini-notification.success::before { background: var(--success); }
+
+        .mini-notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .mini-notification-title {
+            font-weight: 600;
+            color: var(--neutral-900);
+            font-size: 0.9375rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .mini-notification-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .mini-notification.info .mini-notification-icon { color: var(--info); }
+        .mini-notification.success .mini-notification-icon { color: var(--success); }
+        .mini-notification.warning .mini-notification-icon { color: var(--warning); }
+        .mini-notification.danger .mini-notification-icon { color: var(--error); }
+
+        .mini-notification-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--neutral-400);
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            transition: color var(--transition-fast);
+        }
+
+        .mini-notification-close:hover {
+            color: var(--neutral-700);
+        }
+
+        .mini-notification-close svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .mini-notification-message {
+            color: var(--neutral-600);
+            font-size: 0.875rem;
+            line-height: 1.6;
+            margin-bottom: var(--space-4);
+        }
+
+        .mini-notification-action {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .mini-notification-btn {
+            background: var(--brand-primary);
+            color: white;
+            border: none;
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .mini-notification-btn:hover {
+            background: var(--brand-primary-hover);
+            box-shadow: var(--elevation-2);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="/">
+                    <img src="/static/components/logo.png" alt="Finance AI" class="nav-brand-logo-img">
+                    Finance AI Assistant
+                </a>
+            </div>
+            <ul class="nav-menu">
+    <li><a href="/" class="nav-link">Dashboard</a></li>
+    <li><a href="/transactions" class="nav-link">Transactions</a></li>
+    <li><a href="/budgets">Budgets</a></li>
+    <li><a href="/chat" class="nav-link">AI Assistant</a></li>
+    <li><a href="/reports" class="nav-link">Reports</a></li>
+    <li><a href="/hdfc-sync" class="nav-link">Integrations</a></li>
+</ul>
+
+<!-- User Menu (NEW) -->
+{% if current_user.is_authenticated %}
+<div class="user-menu" style="margin-left: auto; display: flex; align-items: center; gap: 16px;">
+    <span style="color: #718096; font-size: 14px; font-weight: 500;">
+        Welcome, <strong style="color: #2d3748;">{{ current_user.username }}</strong>!
+    </span>
+    <a href="{{ url_for('auth.logout') }}" class="btn-secondary" style="padding: 8px 16px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Logout
+    </a>
+</div>
+{% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Finance AI Assistant. All rights reserved. Enterprise Financial Management Platform.</p>
+        </div>
+    </footer>
+
+    <!-- Notification Containers -->
+    <div class="toast-container" id="toastContainer"></div>
+    <div id="miniNotificationContainer"></div>
+
+    <!-- Enterprise Notification System -->
+    <script>
+        class EnterpriseNotificationSystem {
+            constructor() {
+                this.toastContainer = document.getElementById('toastContainer');
+                this.miniNotificationContainer = document.getElementById('miniNotificationContainer');
+                this.updateInterval = null;
+                this.lastNotificationCount = 0;
+            }
+
+            init() {
+                this.updateBadge();
+                this.startPolling();
+            }
+
+            async updateBadge() {
+                try {
+                    const response = await fetch('/api/notifications/unread-count');
+                    const data = await response.json();
+
+                    const badge = document.getElementById('notificationBadge');
+                    if (badge && data.success) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count > 99 ? '99+' : data.count;
+                            badge.classList.remove('hide');
+
+                            if (data.count > this.lastNotificationCount) {
+                                this.checkForNewNotifications();
+                            }
+                            this.lastNotificationCount = data.count;
+                        } else {
+                            badge.classList.add('hide');
+                            this.lastNotificationCount = 0;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Notification badge update failed:', error);
+                }
+            }
+
+            async checkForNewNotifications() {
+                try {
+                    const response = await fetch('/api/notifications/?unread_only=true&limit=1');
+                    const data = await response.json();
+
+                    if (data.success && data.notifications.length > 0) {
+                        const notification = data.notifications[0];
+                        this.showMiniNotification(notification);
+
+                        if ('Notification' in window && Notification.permission === 'default') {
+                            Notification.requestPermission();
+                        }
+
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification(notification.title, {
+                                body: notification.message,
+                                icon: '/static/icon.png'
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to check notifications:', error);
+                }
+            }
+
+            showMiniNotification(notification) {
+                const container = this.miniNotificationContainer;
+                const icon = this.getSVGIcon(notification.type);
+                
+                const popup = document.createElement('div');
+                popup.className = `mini-notification ${notification.severity}`;
+                popup.innerHTML = `
+                    <div class="mini-notification-header">
+                        <div class="mini-notification-title">
+                            <div class="mini-notification-icon">${icon}</div>
+                            ${notification.title}
+                        </div>
+                        <button class="mini-notification-close" onclick="notificationSystem.closeMiniNotification(this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="mini-notification-message">${notification.message}</div>
+                    ${notification.action_url ? `
+                        <div class="mini-notification-action">
+                            <button class="mini-notification-btn" onclick="notificationSystem.handleMiniAction('${notification.action_url}', ${notification.id})">
+                                ${notification.action_label || 'View Details'}
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+
+                container.appendChild(popup);
+                setTimeout(() => popup.classList.add('show'), 10);
+                setTimeout(() => {
+                    popup.classList.remove('show');
+                    setTimeout(() => popup.remove(), 300);
+                }, 6000);
+            }
+
+            closeMiniNotification(button) {
+                const popup = button.closest('.mini-notification');
+                popup.classList.remove('show');
+                setTimeout(() => popup.remove(), 300);
+            }
+
+            async handleMiniAction(url, notificationId) {
+                await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
+                this.updateBadge();
+                window.location.href = url;
+            }
+
+            showToast(message, type = 'info', title = null, duration = 5000) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icon = this.getSVGIcon(type);
+                toast.innerHTML = `
+                    <div class="toast-icon">${icon}</div>
+                    <div class="toast-content">
+                        ${title ? `<div class="toast-title">${title}</div>` : ''}
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button class="toast-close" onclick="notificationSystem.closeToast(this)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                `;
+
+                this.toastContainer.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+
+            closeToast(button) {
+                const toast = button.closest('.toast');
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }
+
+            getSVGIcon(type) {
+                const icons = {
+                    'success': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+                    'warning': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+                    'danger': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+                    'info': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+                    'budget_exceeded': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+                    'budget_warning': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+                    'transaction_added': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+                    'document_processed': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'
+                };
+                return icons[type] || icons['info'];
+            }
+
+            startPolling(interval = 30000) {
+                this.updateBadge();
+                this.updateInterval = setInterval(() => this.updateBadge(), interval);
+            }
+
+            stopPolling() {
+                if (this.updateInterval) {
+                    clearInterval(this.updateInterval);
+                    this.updateInterval = null;
+                }
+            }
+        }
+
+        const notificationSystem = new EnterpriseNotificationSystem();
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => notificationSystem.init());
+        } else {
+            notificationSystem.init();
+        }
+
+        function showNotification(message, type = 'info', title = null) {
+            notificationSystem.showToast(message, type, title);
+        }
+
+        function refreshNotificationBadge() {
+            notificationSystem.updateBadge();
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

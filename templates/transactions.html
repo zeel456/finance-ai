@@ -1,0 +1,555 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions - Finance AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transactions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .transactions-header h2 {
+        margin: 0;
+        color: var(--primary);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    /* Stats Cards */
+    .transaction-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .stat-card .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card .stat-label {
+        color: #6B7280;
+        font-size: 0.9rem;
+    }
+
+    /* Filters */
+    .filters-bar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-size: 0.9rem;
+        color: #374151;
+        font-weight: 500;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        font-size: 0.95rem;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    /* Transactions Table */
+    .transactions-table-wrapper {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: #F9FAFB;
+        border-bottom: 2px solid #E5E7EB;
+    }
+
+    .data-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #F3F4F6;
+        color: #4B5563;
+    }
+
+    .data-table tbody tr:hover {
+        background: #F9FAFB;
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        background: #DBEAFE;
+        color: #1E40AF;
+    }
+
+    .payment-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    .amount-cell {
+        font-weight: 600;
+        color: #059669;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        padding: 0.5rem;
+        border: none;
+        background: #F3F4F6;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+        background: #E5E7EB;
+        transform: translateY(-1px);
+    }
+
+    .btn-icon.edit {
+        color: #2563EB;
+    }
+
+    .btn-icon.delete {
+        color: #DC2626;
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+        padding: 1rem;
+    }
+
+    .pagination button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #D1D5DB;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+        background: #F3F4F6;
+    }
+
+    .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination .page-info {
+        color: #6B7280;
+        font-size: 0.9rem;
+    }
+
+    /* Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-dialog {
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #E5E7EB;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--primary);
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6B7280;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+    }
+
+    .modal-close:hover {
+        background: #F3F4F6;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .form-group label .required {
+        color: #DC2626;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.75rem;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: inherit;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid #E5E7EB;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6B7280;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 2rem;
+        color: #6B7280;
+    }
+
+    @media (max-width: 768px) {
+        .transactions-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .data-table {
+            font-size: 0.85rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="transactions-header">
+        <div>
+            <h2>💰 Transactions</h2>
+            <p style="color: #6B7280; margin: 0.5rem 0 0 0;">Manage all your financial transactions</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-secondary" onclick="window.location.href='/upload'">
+                📤 Upload Document
+            </button>
+            <button class="btn-primary" onclick="showAddTransactionModal()">
+                ➕ Add Transaction
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="transaction-stats">
+        <div class="stat-card">
+            <div class="stat-value" id="totalTransactions">0</div>
+            <div class="stat-label">Total Transactions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalAmount">₹0</div>
+            <div class="stat-label">Total Amount</div>
+        </div>
+       
+        <div class="stat-card">
+            <div class="stat-value" id="thisMonth">₹0</div>
+            <div class="stat-label">This Month</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>Category</label>
+                <select id="filterCategory">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Start Date</label>
+                <input type="date" id="filterStartDate">
+            </div>
+            <div class="filter-group">
+                <label>End Date</label>
+                <input type="date" id="filterEndDate">
+            </div>
+            <div class="filter-group">
+                <label>Payment Method</label>
+                <select id="filterPaymentMethod">
+                    <option value="">All Methods</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Net Banking">Net Banking</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button class="btn-primary" onclick="applyFilters()">
+                    Apply Filters
+                </button>
+                <button class="btn-secondary" onclick="clearFilters()">
+                    Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="transactions-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Vendor</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Payment</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="transactionsTableBody">
+                <tr>
+                    <td colspan="7" class="loading-spinner">
+                        <div>⏳ Loading transactions...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="paginationContainer" style="display: none;">
+        <button id="prevPage" onclick="previousPage()">← Previous</button>
+        <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+        <button id="nextPage" onclick="nextPage()">Next →</button>
+    </div>
+</div>
+
+<!-- Add/Edit Transaction Modal -->
+<div class="modal" id="transactionModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 id="modalTitle">Add Transaction</h3>
+            <button class="modal-close" onclick="closeTransactionModal()">×</button>
+        </div>
+        <form id="transactionForm" onsubmit="event.preventDefault(); saveTransaction();">
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Amount <span class="required">*</span></label>
+                        <input type="number" id="amount" step="0.01" min="0.01" required placeholder="0.00">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Vendor Name <span class="required">*</span></label>
+                        <input type="text" id="vendor_name" required placeholder="e.g., Amazon, Swiggy">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date <span class="required">*</span></label>
+                        <input type="date" id="transaction_date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Category <span class="required">*</span></label>
+                        <select id="category_id" required>
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Payment Method</label>
+                        <select id="payment_method">
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Net Banking">Net Banking</option>
+                            <option value="Wallet">Wallet</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tax Amount</label>
+                        <input type="number" id="tax_amount" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Description</label>
+                    <textarea id="description" placeholder="Optional notes about this transaction"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeTransactionModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary">
+                    <span id="saveButtonText">Save Transaction</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
+{% endblock %}

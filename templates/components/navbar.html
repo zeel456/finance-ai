@@ -1,0 +1,251 @@
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <a href="/">
+<img src="{{ url_for('static', filename='components/logo.png') }}" alt="Finance AI Logo" class="nav-logo">
+                <span>Finance AI</span>
+            </a>
+        </div>
+        
+        <ul class="nav-menu">
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/upload">Upload</a></li>
+            <li><a href="/transactions">Transactions</a></li>
+            <li><a href="/budgets">Budgets</a></li>
+            <li><a href="/reports">Reports</a></li>
+            <li><a href="/insights">Insights</a></li>
+            <li><a href="/chat">Chat AI</a></li>
+            
+            <!-- ✅ NOTIFICATION BELL -->
+            <li class="nav-notification">
+                <div class="notification-bell-container" onclick="window.location.href='/notifications'" title="Notifications">
+                    <span class="notification-bell">🔔</span>
+                    <span class="notification-badge hide" id="notificationBadge">0</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<style>
+    .navbar {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        padding: 0;
+        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.04);
+        border-bottom: 1px solid rgba(212, 197, 176, 0.3);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+    }
+
+    .nav-brand a {
+        color: #4ECDC4;
+        text-decoration: none;
+        font-size: 24px;
+        font-weight: 700;
+        padding: 15px 0;
+        display: inline-block;
+        transition: opacity 0.3s ease;
+    }
+
+    .nav-brand a:hover {
+        opacity: 0.8;
+    }
+
+    .nav-logo {
+        height: 40px;
+        width: auto;
+        object-fit: contain;
+        vertical-align: middle;
+        margin-right: 10px;
+        display: inline-block;
+    }
+
+    .nav-menu {
+        list-style: none;
+        display: flex;
+        gap: 5px;
+        margin: 0;
+        padding: 0;
+        align-items: center;
+    }
+
+    .nav-menu li {
+        position: relative;
+    }
+
+    .nav-menu a {
+        color: #2C3E50;
+        text-decoration: none;
+        padding: 20px 18px;
+        display: block;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 8px 8px 0 0;
+        font-size: 15px;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .nav-menu a::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #4ECDC4;
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 3px 3px 0 0;
+    }
+
+    .nav-menu a:hover {
+        background: rgba(78, 205, 196, 0.08);
+        color: #4ECDC4;
+    }
+
+    .nav-menu a:hover::after {
+        transform: scaleX(1);
+    }
+
+    .nav-menu a.active {
+        background: rgba(78, 205, 196, 0.12);
+        color: #4ECDC4;
+        font-weight: 600;
+    }
+
+    .nav-menu a.active::after {
+        transform: scaleX(1);
+        height: 3px;
+    }
+
+    /* Notification bell specific styles */
+    .nav-notification {
+        margin-left: 10px;
+    }
+
+    .notification-bell-container {
+        position: relative;
+        cursor: pointer;
+        padding: 12px;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .notification-bell-container:hover {
+        background: rgba(78, 205, 196, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .notification-bell {
+        font-size: 20px;
+        display: block;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #FF6B6B;
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+    }
+
+    .notification-badge.hide {
+        display: none;
+    }
+
+    @media (max-width: 1024px) {
+        .nav-menu {
+            gap: 2px;
+        }
+        
+        .nav-menu a {
+            padding: 20px 12px;
+            font-size: 14px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .nav-container {
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .nav-menu {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .nav-menu a {
+            padding: 12px 15px;
+            font-size: 13px;
+        }
+
+        .notification-bell-container {
+            padding: 10px;
+        }
+    }
+</style>
+
+<script>
+    // Highlight active page
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-menu a');
+        
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+
+        // Load notification count
+        loadNotificationCount();
+    });
+
+    function loadNotificationCount() {
+        fetch('/api/notifications/unread-count')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('notificationBadge');
+                if (data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.classList.remove('hide');
+                } else {
+                    badge.classList.add('hide');
+                }
+            })
+            .catch(error => console.error('Error loading notification count:', error));
+    }
+
+    // Refresh notification count every 30 seconds
+    setInterval(loadNotificationCount, 30000);
+</script>
