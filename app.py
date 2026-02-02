@@ -27,6 +27,8 @@ from sqlalchemy import func, desc
 from models.user import User
 from flask_login import LoginManager, login_required, current_user
 from routes.auth_routes import auth_bp
+import psutil
+import os
 
 
 def create_app():
@@ -791,7 +793,32 @@ def validate_duplicate():
             return jsonify({'success': True, 'is_duplicate': False})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+    
+@app.before_request
+def log_memory():
+    """Log memory usage before each request"""
+    if os.environ.get('FLASK_ENV') == 'production':
+        process = psutil.Process()
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        print(f"📊 Memory usage: {memory_mb:.1f} MB")
+        
+        # If approaching limit, force garbage collection
+        if memory_mb > 400:  # 400MB on 512MB limit
+            print("⚠️ High memory, forcing cleanup...")
+            import gc
+            gc.collect()
 
+@app.after_request
+def cleanup_after_request(response):
+    """Cleanup after each request"""
+    import gc
+    gc.collect()
+    return response
+
+@app.route('/health')
+def health_check_memory():
+    """Health check endpoint for Render"""
+    return {'status': 'healthy', 'service': 'finance-app'}, 200
 
 # ============================================================================
 

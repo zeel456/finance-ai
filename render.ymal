@@ -1,23 +1,52 @@
 services:
   - type: web
     name: finance-app
-    env: python
-    region: oregon  # Change to 'singapore' for closer to India
+    env: docker
+    dockerfilePath: ./Dockerfile
+    region: singapore  # Change to 'singapore' if closer to your users
     plan: free
-    buildCommand: "pip install -r requirements.txt && apt-get update && apt-get install -y tesseract-ocr"
-    startCommand: "gunicorn app:app"
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Auto-deploy
+    autoDeploy: true
+    
+    # Environment variables
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.6
       - key: SECRET_KEY
         generateValue: true
+      
       - key: FLASK_ENV
         value: production
-      - key: TESSERACT_PATH
-        value: /usr/bin/tesseract
-    
+      
+      - key: DATABASE_URL
+        fromDatabase:
+          name: finance-db
+          property: connectionString
+      
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      
+      - key: MAX_CONTENT_LENGTH
+        value: "16777216"  # 16MB max upload
+      
+      - key: UPLOAD_FOLDER
+        value: /app/uploads
+      
+      - key: ALLOWED_EXTENSIONS
+        value: pdf,png,jpg,jpeg,gif,bmp,tiff,webp
+      
+      # Memory optimization
+      - key: MALLOC_TRIM_THRESHOLD_
+        value: "100000"
+      
+      - key: MALLOC_MMAP_THRESHOLD_
+        value: "100000"
+
 databases:
   - name: finance-db
     databaseName: finance_app
     user: finance_user
     plan: free
+    region: singapore  # Must match web service region
