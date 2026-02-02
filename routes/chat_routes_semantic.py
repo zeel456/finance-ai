@@ -20,11 +20,15 @@ def get_semantic_bot():
     """Get or create semantic chatbot instance (lazy initialization)"""
     global _semantic_bot
     if _semantic_bot is None:
-        print("🚀 Initializing Semantic Chatbot (first use)...")
+        print("🚀 Initializing Semantic Chatbot (first use)...", flush=True)
         try:
             _semantic_bot = SemanticChatbot()
+            print("✅ Semantic Chatbot initialized successfully", flush=True)
         except Exception as e:
-            print(f"❌ Failed to initialize SemanticChatbot: {e}")
+            import traceback
+            print(f"❌ Failed to initialize SemanticChatbot: {e}", flush=True)
+            print(traceback.format_exc(), flush=True)
+            _semantic_bot = None  # Reset so next request retries
             raise RuntimeError(
                 f"Chatbot initialization failed: {e}. "
                 "Check that spaCy model (en_core_web_md) and "
@@ -97,12 +101,9 @@ def create_conversation():
         db.session.add(conversation)
         db.session.commit()
         
-        # FIX: Removed get_semantic_bot().reset_conversation() here.
-        # There is nothing to reset on a brand-new empty conversation,
-        # and forcing bot initialization at this point crashes on Render
-        # (OOM or missing model). The bot will initialize lazily on the
-        # first actual message via send_message(), and context is reset
-        # there when the conversation_id changes anyway (see process_message).
+        # Don't initialize the bot here — nothing to reset on a new empty
+        # conversation. The bot inits lazily on first message, and
+        # process_message() auto-resets context when conversation_id changes.
         
         return jsonify({
             'success': True,
@@ -226,7 +227,7 @@ def send_message(conversation_id):
     except RuntimeError as e:
         # Chatbot init failure — return a clear message to the user
         db.session.rollback()
-        print(f"RuntimeError in send_message: {str(e)}")
+        print(f"RuntimeError in send_message: {str(e)}", flush=True)
         return jsonify({
             'success': False,
             'error': str(e)
@@ -234,7 +235,7 @@ def send_message(conversation_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"Error in send_message: {str(e)}")
+        print(f"Error in send_message: {str(e)}", flush=True)
         import traceback
         traceback.print_exc()
         
@@ -315,7 +316,7 @@ def search_conversations():
 def reset_context(conversation_id):
     """
     Reset the chatbot context for this conversation.
-    Only initializes the bot if it's already running.
+    Only resets if the bot is already initialized — won't force init.
     """
     try:
         conversation = Conversation.query.filter_by(
@@ -329,7 +330,6 @@ def reset_context(conversation_id):
                 'error': 'Conversation not found'
             }), 404
         
-        # Only reset if the bot is already initialized — don't force init just for a reset
         global _semantic_bot
         if _semantic_bot is not None:
             _semantic_bot.reset_conversation()
@@ -350,7 +350,7 @@ def reset_context(conversation_id):
 def chatbot_status():
     """
     Get current chatbot status and context.
-    Reports whether the bot has been initialized yet.
+    Reports whether the bot has been initialized yet without forcing init.
     """
     try:
         global _semantic_bot
@@ -385,3 +385,6 @@ def chatbot_status():
             'success': False,
             'error': str(e)
         }), 500
+    
+
+    
