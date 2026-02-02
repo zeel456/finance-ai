@@ -1,3 +1,8 @@
+"""
+FIXED Flask Application with Proper Authentication
+Save as: app.py
+"""
+
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_from_directory
 from config import Config
 from models.database import db, init_db
@@ -28,9 +33,7 @@ from models.user import User
 from flask_login import LoginManager, login_required, current_user
 from routes.auth_routes import auth_bp
 import psutil
-import os
 import gc
-from ai_modules.model_loader import AIModelLoader
 
 
 def create_app():
@@ -74,6 +77,45 @@ def create_app():
         return db.session.get(User, int(user_id))
 
     # ========================================================================
+    # ✅ FIXED: API AUTHENTICATION HANDLING
+    # ========================================================================
+    @app.before_request
+    def handle_api_authentication():
+        """
+        Handle authentication differently for API routes vs web routes.
+        API routes should return JSON 401, not redirect to login.
+        """
+        from flask import request, jsonify
+        from flask_login import current_user
+        
+        # Skip for static files and health check
+        if request.path.startswith('/static/') or request.path == '/health':
+            return None
+        
+        # For API routes, return JSON error instead of redirect
+        if request.path.startswith('/api/'):
+            # Public API endpoints that don't need auth
+            public_endpoints = [
+                '/api/login',
+                '/api/register',
+                '/api/check-username',
+                '/api/check-email'
+            ]
+            
+            if request.path in public_endpoints:
+                return None
+            
+            # Check if user is authenticated
+            if not current_user.is_authenticated:
+                return jsonify({
+                    'success': False,
+                    'error': 'Authentication required',
+                    'redirect': '/login'
+                }), 401
+        
+        return None
+
+    # ========================================================================
     # DATABASE INITIALIZATION
     # ========================================================================
     with app.app_context():
@@ -90,7 +132,7 @@ def create_app():
     # ========================================================================
     # BLUEPRINT REGISTRATION
     # ========================================================================
-    app.register_blueprint(auth_bp)           # Must be first
+    app.register_blueprint(auth_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(report_bp)
     app.register_blueprint(budget_bp)
@@ -105,7 +147,7 @@ app = create_app()
 
 
 # ============================================================================
-# PAGE ROUTES (each defined exactly once)
+# PAGE ROUTES
 # ============================================================================
 
 @app.route('/')
@@ -187,13 +229,34 @@ def upload_page():
 
 
 # ============================================================================
-# DASHBOARD API
+# ✅ FIXED: HEALTH CHECK (NO AUTH REQUIRED)
 # ============================================================================
 
 @app.route('/health')
-@login_required
 def health_check():
-    return jsonify({'status': 'healthy', 'database': 'connected', 'version': '1.0.0'})
+    """Single health check endpoint for Railway - NO AUTH REQUIRED"""
+    try:
+        process = psutil.Process()
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        
+        return jsonify({
+            'status': 'healthy',
+            'service': 'finance-app',
+            'memory_mb': round(memory_mb, 1),
+            'memory_percent': round(process.memory_percent(), 1),
+            'database': 'connected',
+            'version': '1.0.0'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+# ============================================================================
+# DASHBOARD API
+# ============================================================================
 
 @app.route('/api/stats')
 @login_required
@@ -480,12 +543,6 @@ def get_performance_stats():
 
 # ============================================================================
 # TRANSACTIONS API
-# Each URL is registered exactly once:
-#   /api/transactions            → handle_transactions        (GET, POST)
-#   /api/transactions/<id>       → handle_single_transaction  (GET, PUT, DELETE)
-#   /api/transactions/bulk-delete → bulk_delete_transactions  (POST)
-#   /api/transactions/import     → import_transactions        (POST)
-#   /api/transactions/validate-duplicate → validate_duplicate (POST)
 # ============================================================================
 
 @app.route('/api/transactions', methods=['GET', 'POST'])
@@ -601,16 +658,13 @@ def handle_single_transaction(trans_id):
     if not transaction:
         return jsonify({'success': False, 'error': 'Transaction not found'}), 404
 
-    # ── GET ──────────────────────────────────────────────────────────────────
     if request.method == 'GET':
         return jsonify({'success': True, 'transaction': transaction.to_dict()})
 
-    # ── PUT ───────────────────────────────────────────────────────────────────
     if request.method == 'PUT':
         try:
             data = request.get_json()
 
-            # Store old values for budget sync
             old_category_id = transaction.category_id
             old_date = transaction.transaction_date
 
@@ -644,7 +698,6 @@ def handle_single_transaction(trans_id):
             transaction.updated_at = datetime.utcnow()
             db.session.commit()
 
-            # Auto-sync affected budgets
             from utils.budget_utils import BudgetUtils
             BudgetUtils.sync_transaction_budgets(
                 transaction,
@@ -665,17 +718,14 @@ def handle_single_transaction(trans_id):
             traceback.print_exc()
             return jsonify({'success': False, 'error': str(e)}), 500
 
-    # ── DELETE ────────────────────────────────────────────────────────────────
     if request.method == 'DELETE':
         try:
-            # Store values before deletion for budget sync
             category_id = transaction.category_id
             transaction_date = transaction.transaction_date
 
             db.session.delete(transaction)
             db.session.commit()
 
-            # Auto-sync budget
             from utils.budget_utils import BudgetUtils
             BudgetUtils.sync_deleted_transaction_budget(category_id, transaction_date)
 
@@ -753,7 +803,6 @@ def import_transactions():
 
         db.session.commit()
 
-        # Batch sync all budgets after import
         from utils.budget_utils import BudgetUtils
         print("🔄 Syncing all budgets after bulk import...")
         updated_count = BudgetUtils.sync_all_budgets()
@@ -795,48 +844,29 @@ def validate_duplicate():
             return jsonify({'success': True, 'is_duplicate': False})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-    
+
+
+# ============================================================================
+# MEMORY MANAGEMENT
+# ============================================================================
+
 @app.before_request
 def log_memory():
     """Log memory usage before each request"""
     if os.environ.get('FLASK_ENV') == 'production':
         process = psutil.Process()
         memory_mb = process.memory_info().rss / 1024 / 1024
-        print(f"📊 Memory usage: {memory_mb:.1f} MB")
         
-        # If approaching limit, force garbage collection
         if memory_mb > 400:  # 400MB on 512MB limit
-            print("⚠️ High memory, forcing cleanup...")
-            import gc
+            print(f"⚠️ High memory ({memory_mb:.1f} MB), forcing cleanup...")
             gc.collect()
 
 @app.after_request
 def cleanup_after_request(response):
     """Cleanup after each request"""
-    import gc
     gc.collect()
     return response
 
-@app.route('/health')
-def health_check_memory():
-    """Health check endpoint for Render"""
-    return {'status': 'healthy', 'service': 'finance-app'}, 200
-
-@app.route('/health')
-def health_check_for_models():
-    """Health check endpoint for Render"""
-    try:
-        process = psutil.Process()
-        memory_mb = process.memory_info().rss / 1024 / 1024
-        
-        return {
-            'status': 'healthy',
-            'service': 'finance-app',
-            'memory_mb': round(memory_mb, 1),
-            'memory_percent': round(process.memory_percent(), 1)
-        }, 200
-    except Exception as e:
-        return {'status': 'error', 'message': str(e)}, 500
 
 # ============================================================================
 
