@@ -13,7 +13,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     # Reduce transformers cache
     TRANSFORMERS_CACHE=/tmp/transformers_cache \
     SENTENCE_TRANSFORMERS_HOME=/tmp/sentence_transformers \
-    HF_HOME=/tmp/huggingface
+    HF_HOME=/tmp/huggingface \
+    # Ensure Python packages are in PATH
+    PATH="/home/appuser/.local/bin:$PATH"
 
 # Install ONLY essential system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -36,13 +38,17 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     # Install PyTorch CPU-only (700MB instead of 2GB)
     pip install --no-cache-dir torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu && \
-    # Install other ML packages - FIXED VERSION HERE
+    # Install other ML packages - FIXED VERSION
     pip install --no-cache-dir \
         sentence-transformers==2.7.0 \
         transformers==4.41.2 \
         spacy==3.7.5 && \
-    # Install remaining requirements (exclude torch as already installed)
-    grep -v "torch==" requirements.txt | pip install --no-cache-dir -r /dev/stdin && \
+    # Install remaining requirements (exclude torch, sentence-transformers, transformers, spacy)
+    grep -v "torch==" requirements.txt | \
+    grep -v "sentence-transformers==" | \
+    grep -v "transformers==" | \
+    grep -v "spacy==" | \
+    pip install --no-cache-dir -r /dev/stdin && \
     # Download spaCy model (small version only)
     python -m spacy download en_core_web_sm --no-deps && \
     # Clean up pip cache aggressively
@@ -66,7 +72,7 @@ COPY . .
 RUN mkdir -p uploads temp_files static/uploads /tmp/transformers_cache /tmp/sentence_transformers /tmp/huggingface && \
     chmod -R 755 uploads temp_files static
 
-# Create non-root user
+# Create non-root user BEFORE switching
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app /tmp/transformers_cache /tmp/sentence_transformers /tmp/huggingface
 
@@ -76,12 +82,9 @@ USER appuser
 # Expose port (Railway will use $PORT environment variable)
 EXPOSE 10000
 
-# Lightweight health check (optional - remove if you don't have a /health endpoint)
-# HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-#     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:10000/health', timeout=5)" || exit 1
-
 # MEMORY-OPTIMIZED gunicorn for Railway
-CMD gunicorn app:app \
+# Use python -m to ensure gunicorn is found
+CMD python -m gunicorn app:app \
     --bind 0.0.0.0:$PORT \
     --workers 1 \
     --threads 2 \
