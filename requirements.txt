@@ -1,64 +1,67 @@
-# Flask Framework - Keep same versions
-Flask==3.0.0
+# Flask Framework - Stable versions
+Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
-Flask-Migrate==4.0.5
-Werkzeug==3.0.1
-WTForms==3.1.1
+Flask-Migrate==4.0.7
+Werkzeug==3.0.3
+WTForms==3.1.2
 
-# Production Server - Optimized
-gunicorn==21.2.0
-gevent==24.2.1  # Added for async workers
+# Production Server
+gunicorn==22.0.0
+gevent==24.2.1
 
 # Database
-sqlalchemy==2.0.23
+sqlalchemy==2.0.30
 psycopg2-binary==2.9.9
 
-# Image Processing & OCR - LIGHTER versions
-Pillow==10.1.0
+# Image Processing & OCR
+Pillow==10.3.0
 pytesseract==0.3.10
 pdf2image==1.17.0
 
 # PDF Processing
 PyPDF2==3.0.1
-reportlab==4.0.7
+reportlab==4.2.0
 
-# Data Processing - CRITICAL OPTIMIZATION
-# REMOVED: pandas (300MB) - use native Python or sqlite3
-# REMOVED: numpy (comes with scikit-learn if needed)
-# KEEP: openpyxl for Excel support
+# Data Processing - Compatible versions
+pandas==2.2.2
+numpy==1.26.4
 openpyxl==3.1.2
 
-# Machine Learning - LIGHTER alternatives
-# REMOVED: opencv-python-headless (100MB)
-# Use PIL/Pillow for basic image ops instead
-scikit-learn==1.3.2  # Lighter than latest, includes numpy
+# Computer Vision
+opencv-python-headless==4.10.0.84
 
-# NLP - CRITICAL OPTIMIZATION: Remove heavy transformers
-# REMOVED: spacy (200MB with models)
-# REMOVED: sentence-transformers (150MB)
-# REMOVED: huggingface-hub
-# Use lightweight alternatives:
-nltk==3.8.1  # Much lighter NLP
-textblob==0.17.1  # Simple NLP tasks
+# NLP & Machine Learning - Tested compatible versions
+spacy==3.7.5
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+# Transformers - Compatible versions
+sentence-transformers==3.0.1
+transformers==4.41.2
+torch==2.3.1
+huggingface-hub==0.23.4
+
+# Additional ML dependencies
+scikit-learn==1.5.0
+joblib==1.4.2
 
 # Text Processing
 fuzzywuzzy==0.18.0
-python-Levenshtein==0.23.0
+python-Levenshtein==0.25.1
 
 # Utilities
-python-dateutil==2.8.2
-python-dotenv==1.0.0
-requests==2.31.0
-psutil==5.9.6
-cachetools==5.3.2
+python-dateutil==2.9.0
+python-dotenv==1.0.1
+requests==2.32.3
+psutil==5.9.8
+cachetools==5.3.3
 
 # Security
-cryptography==41.0.7
-bcrypt==4.1.2
+cryptography==42.0.8
+bcrypt==4.1.3
 
-# Memory efficiency
-joblib==1.3.2  # For model caching
-
-# TOTAL ESTIMATED SIZE: ~200MB (vs 830MB original)
+# Additional dependencies for sentence-transformers
+safetensors==0.4.3
+tokenizers==0.19.1
+tqdm==4.66.4
