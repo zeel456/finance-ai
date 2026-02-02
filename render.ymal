@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# CACHE BUSTER - change this date to force rebuild
+ENV CACHE_BUST=2024-02-03-v1
+
 # Environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -25,8 +28,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Install spaCy model using the OFFICIAL method
-RUN python -m spacy download en_core_web_sm --direct
+# Install spaCy model - DIRECT DOWNLOAD METHOD
+RUN pip install --no-cache-dir https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
 
 # Pre-download sentence transformer
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
