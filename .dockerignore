@@ -1,75 +1,81 @@
+# .dockerignore - Exclude unnecessary files from Docker image
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-*.pyc
-*.pyo
-*.pyd
+*.egg-info/
+dist/
+build/
 
 # Virtual environments
-env/
 venv/
+env/
 ENV/
 .venv/
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-
-# Flask
-instance/
-.webassets-cache
-
-# Environment variables
-.env
-.env.local
-.flaskenv
-
-# IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
 .DS_Store
-Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Documentation
+README.md
+RAILWAY_EXACT_STEPS.md
+VERSION_GUIDE.md
+CODE_MIGRATION_GUIDE.md
+*.md
+docs/
+
+# Local files
+*.db
+*.sqlite
+*.sqlite3
+local_data/
 
 # Logs
 *.log
 logs/
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
+# Environment
+.env
+.env.local
+.env.*.local
 
-# User uploaded files
-uploads/*
-!uploads/.gitkeep
-temp_files/*
-!temp_files/.gitkeep
+# Temporary files
+temp_files/
+tmp/
+*.tmp
 
-# Git
-.git/
-.gitignore
+# Node modules (if any)
+node_modules/
 
-# Documentation
-*.md
-!README.md
-docs/
+# Unnecessary config files
+.editorconfig
+.eslintrc
+.prettierrc
 
-# Tests
-tests/
-test_*.py
+# CI/CD (not needed in image)
+.github/
+.gitlab-ci.yml
+.travis.yml
 
-# Docker
-docker-compose.yml
-Dockerfile.dev
-.dockerignore
-
-# Render
-render.yaml
+# Large files that shouldn't be in image
+*.zip
+*.tar.gz
+*.rar
