@@ -5,11 +5,15 @@ from models.database import db
 from models.transaction import Transaction
 from models.category import Category
 from sqlalchemy import func, extract, and_
+import gc
 
 class NLPQueryProcessor:
     """Process natural language queries about financial data"""
     
     def __init__(self):
+        # Removed heavy AI models - using rule-based approach for now
+        # Models will be lazy-loaded only if needed in future
+        
         self.intents = {
             'total_expense': ['total', 'spent', 'spend', 'expense', 'expenses'],
             'category_expense': ['category', 'on', 'for'],
@@ -69,6 +73,8 @@ class NLPQueryProcessor:
             return 'payment_method'
         elif 'trend' in detected_intents:
             return 'trend'
+        elif 'average_expense' in detected_intents:
+            return 'average_expense'
         elif 'total_expense' in detected_intents:
             return 'total_expense'
         else:
@@ -87,14 +93,20 @@ class NLPQueryProcessor:
             'food': 'Food & Dining',
             'dining': 'Food & Dining',
             'restaurant': 'Food & Dining',
+            'grocery': 'Groceries',
+            'groceries': 'Groceries',
             'transport': 'Transportation',
             'travel': 'Travel',
             'shopping': 'Shopping',
             'entertainment': 'Entertainment',
-            'utilities': 'Utilities',
+            'utilities': 'Bills & Utilities',
+            'bills': 'Bills & Utilities',
             'health': 'Healthcare',
+            'medical': 'Healthcare',
             'education': 'Education',
-            'insurance': 'Insurance'
+            'insurance': 'Insurance',
+            'fuel': 'Fuel',
+            'gas': 'Fuel'
         }
         
         for keyword, category in category_keywords.items():
@@ -180,28 +192,35 @@ class NLPQueryProcessor:
     
     def process_query(self, query):
         """Main function to process a query and return results"""
-        intent = self.detect_intent(query)
+        try:
+            intent = self.detect_intent(query)
+            
+            if intent == 'total_expense':
+                return self.handle_total_expense(query)
+            elif intent == 'category_expense':
+                return self.handle_category_expense(query)
+            elif intent == 'comparison':
+                return self.handle_comparison(query)
+            elif intent == 'top_spending':
+                return self.handle_top_spending(query)
+            elif intent == 'vendor_analysis':
+                return self.handle_vendor_analysis(query)
+            elif intent == 'budget_check':
+                return self.handle_budget_check(query)
+            elif intent == 'tax_query':
+                return self.handle_tax_query(query)
+            elif intent == 'payment_method':
+                return self.handle_payment_method(query)
+            elif intent == 'trend':
+                return self.handle_trend(query)
+            elif intent == 'average_expense':
+                return self.handle_average_expense(query)
+            else:
+                return self.handle_unknown(query)
         
-        if intent == 'total_expense':
-            return self.handle_total_expense(query)
-        elif intent == 'category_expense':
-            return self.handle_category_expense(query)
-        elif intent == 'comparison':
-            return self.handle_comparison(query)
-        elif intent == 'top_spending':
-            return self.handle_top_spending(query)
-        elif intent == 'vendor_analysis':
-            return self.handle_vendor_analysis(query)
-        elif intent == 'budget_check':
-            return self.handle_budget_check(query)
-        elif intent == 'tax_query':
-            return self.handle_tax_query(query)
-        elif intent == 'payment_method':
-            return self.handle_payment_method(query)
-        elif intent == 'trend':
-            return self.handle_trend(query)
-        else:
-            return self.handle_unknown(query)
+        finally:
+            # Clean up memory after processing
+            gc.collect()
     
     def handle_total_expense(self, query):
         """Handle total expense queries"""

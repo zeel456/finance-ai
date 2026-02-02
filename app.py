@@ -29,6 +29,8 @@ from flask_login import LoginManager, login_required, current_user
 from routes.auth_routes import auth_bp
 import psutil
 import os
+import gc
+from ai_modules.model_loader import AIModelLoader
 
 
 def create_app():
@@ -819,6 +821,22 @@ def cleanup_after_request(response):
 def health_check_memory():
     """Health check endpoint for Render"""
     return {'status': 'healthy', 'service': 'finance-app'}, 200
+
+@app.route('/health')
+def health_check_for_models():
+    """Health check endpoint for Render"""
+    try:
+        process = psutil.Process()
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        
+        return {
+            'status': 'healthy',
+            'service': 'finance-app',
+            'memory_mb': round(memory_mb, 1),
+            'memory_percent': round(process.memory_percent(), 1)
+        }, 200
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}, 500
 
 # ============================================================================
 

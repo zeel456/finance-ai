@@ -1,10 +1,12 @@
 FROM python:3.11-slim
 
-# Prevent Python from writing pyc files and buffering stdout/stderr
+# Environment variables for optimization
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     MALLOC_TRIM_THRESHOLD_=100000 \
-    MALLOC_MMAP_THRESHOLD_=100000
+    MALLOC_MMAP_THRESHOLD_=100000 \
+    TRANSFORMERS_CACHE=/tmp/transformers_cache \
+    SENTENCE_TRANSFORMERS_HOME=/tmp/sentence_transformers
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -19,26 +21,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set working directory
 WORKDIR /app
 
-# Copy only requirements first (for better caching)
+# Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies with no cache
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy model if needed (comment out if not using spaCy)
-# RUN python -m spacy download en_core_web_sm
+# Download small spaCy model
+RUN python -m spacy download en_core_web_sm
+
+# Pre-download sentence transformer model
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # Copy application code
 COPY . .
 
-# Create necessary directories with proper permissions
-RUN mkdir -p uploads temp_files static/uploads && \
+# Create necessary directories
+RUN mkdir -p uploads temp_files static/uploads /tmp/transformers_cache /tmp/sentence_transformers && \
     chmod -R 755 uploads temp_files static
 
-# Create non-root user for security
+# Create non-root user
 RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
+    chown -R appuser:appuser /app /tmp/transformers_cache /tmp/sentence_transformers
 
 # Switch to non-root user
 USER appuser
@@ -50,7 +55,7 @@ EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:10000/health', timeout=5)"
 
-# Run gunicorn with optimized settings
+# Run gunicorn
 CMD gunicorn app:app \
     --bind 0.0.0.0:$PORT \
     --workers 1 \

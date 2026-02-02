@@ -85,3 +85,50 @@ htmlcov/
 
 # Deployment
 *.pid
+
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment
+.env
+.env.local
+.flaskenv
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+temp_files/*
+!temp_files/.gitkeep
+static/uploads/*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Distribution
+dist/
+build/
+*.egg-info/

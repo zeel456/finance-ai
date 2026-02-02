@@ -7,7 +7,6 @@ from PyPDF2 import PdfReader
 import pdf2image
 from typing import Tuple, Optional
 import gc
-import sys
 
 class ImprovedDocumentProcessor:
     """Memory-optimized OCR with full accuracy maintained"""
@@ -28,45 +27,37 @@ class ImprovedDocumentProcessor:
     def _clean_memory(self):
         """Aggressive memory cleanup"""
         gc.collect()
-        
+    
     def preprocess_image_advanced(self, image: Image.Image) -> Image.Image:
         """Advanced preprocessing with memory management"""
         try:
-            # Convert to numpy early, close PIL image
             img_array = np.array(image)
             
-            # Convert to grayscale
             if len(img_array.shape) == 3:
                 gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
             else:
                 gray = img_array
             
-            # Free original array
             del img_array
             
-            # Smart resizing - stay within bounds
             height, width = gray.shape
             
-            # Upscale if too small
             if height < 1000 or width < 1000:
                 scale = max(1000 / height, 1000 / width)
                 new_width = int(width * scale)
                 new_height = int(height * scale)
                 gray = cv2.resize(gray, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
             
-            # Downscale if too large (prevents memory overflow)
             height, width = gray.shape
-            if height > 2500 or width > 2500:  # Reduced from 3000
+            if height > 2500 or width > 2500:
                 scale = min(2500 / height, 2500 / width)
                 new_width = int(width * scale)
                 new_height = int(height * scale)
                 gray = cv2.resize(gray, (new_width, new_height), interpolation=cv2.INTER_AREA)
             
-            # Noise removal
             denoised = cv2.fastNlMeansDenoising(gray, None, 10, 7, 21)
             del gray
             
-            # Adaptive thresholding
             binary = cv2.adaptiveThreshold(
                 denoised, 255,
                 cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -75,15 +66,12 @@ class ImprovedDocumentProcessor:
             )
             del denoised
             
-            # Deskew
             binary = self.deskew_image(binary)
             
-            # Morphological operations
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
             processed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
             del binary
             
-            # Convert back to PIL
             pil_image = Image.fromarray(processed)
             del processed
             
@@ -97,7 +85,7 @@ class ImprovedDocumentProcessor:
             return self.preprocess_image_basic(image)
     
     def deskew_image(self, image: np.ndarray) -> np.ndarray:
-        """Detect and correct skew - same accuracy"""
+        """Detect and correct skew"""
         try:
             edges = cv2.Canny(image, 50, 150, apertureSize=3)
             lines = cv2.HoughLines(edges, 1, np.pi / 180, 200)
@@ -132,12 +120,11 @@ class ImprovedDocumentProcessor:
             return image
     
     def preprocess_image_basic(self, image: Image.Image) -> Image.Image:
-        """Basic preprocessing - same as before"""
+        """Basic preprocessing as fallback"""
         try:
             if image.mode != 'RGB':
                 image = image.convert('RGB')
             
-            # Limit size for memory
             max_size = 2000
             if image.width > max_size or image.height > max_size:
                 image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
@@ -159,11 +146,10 @@ class ImprovedDocumentProcessor:
             return image
     
     def extract_text_from_image(self, image_path: str, use_advanced: bool = True) -> Tuple[Optional[str], Optional[str]]:
-        """Extract text - maintains all accuracy features"""
+        """Extract text from image using OCR with preprocessing"""
         try:
             image = Image.open(image_path)
             
-            # Preprocess
             if use_advanced:
                 try:
                     processed_image = self.preprocess_image_advanced(image)
@@ -173,11 +159,9 @@ class ImprovedDocumentProcessor:
             else:
                 processed_image = self.preprocess_image_basic(image)
             
-            # Close original to free memory
             image.close()
             del image
             
-            # Try multiple configs
             results = []
             
             for config_name, config in self.ocr_config.items():
@@ -190,14 +174,12 @@ class ImprovedDocumentProcessor:
                         'config': config_name
                     })
                     
-                    # Clean between attempts
                     self._clean_memory()
                     
                 except Exception as e:
                     print(f"OCR with config {config_name} failed: {e}")
                     continue
             
-            # Clean up processed image
             processed_image.close()
             del processed_image
             self._clean_memory()
@@ -216,7 +198,7 @@ class ImprovedDocumentProcessor:
             return None, f"Error extracting text from image: {str(e)}"
     
     def extract_text_from_pdf(self, pdf_path: str) -> Tuple[Optional[str], Optional[str]]:
-        """Extract from PDF - same functionality"""
+        """Extract text from PDF"""
         try:
             text = ""
             
@@ -228,7 +210,6 @@ class ImprovedDocumentProcessor:
                     if page_text:
                         text += page_text + "\n"
                     
-                    # Clean memory every 5 pages
                     if page_num % 5 == 0:
                         self._clean_memory()
             
@@ -243,10 +224,9 @@ class ImprovedDocumentProcessor:
             return None, f"Error extracting text from PDF: {str(e)}"
     
     def extract_text_from_scanned_pdf(self, pdf_path: str) -> Tuple[Optional[str], Optional[str]]:
-        """OCR scanned PDF - process page by page to save memory"""
+        """Extract text from scanned PDF using OCR"""
         try:
-            # Convert with lower DPI on free tier to save memory
-            dpi = 200  # Reduced from 300, still good accuracy
+            dpi = 200
             images = pdf2image.convert_from_path(pdf_path, dpi=dpi)
             
             all_text = []
@@ -254,10 +234,8 @@ class ImprovedDocumentProcessor:
             for i, image in enumerate(images):
                 print(f"Processing page {i+1}/{len(images)}...")
                 
-                # Process image
                 processed_image = self.preprocess_image_advanced(image)
                 
-                # Extract text
                 page_text = pytesseract.image_to_string(
                     processed_image,
                     lang='eng',
@@ -267,7 +245,6 @@ class ImprovedDocumentProcessor:
                 if page_text.strip():
                     all_text.append(f"--- Page {i+1} ---\n{page_text}")
                 
-                # CRITICAL: Clean up immediately after each page
                 image.close()
                 processed_image.close()
                 del image
@@ -277,7 +254,6 @@ class ImprovedDocumentProcessor:
             
             combined_text = "\n\n".join(all_text)
             
-            # Final cleanup
             del all_text
             del images
             self._clean_memory()
@@ -292,7 +268,7 @@ class ImprovedDocumentProcessor:
             return None, f"Error processing scanned PDF: {str(e)}"
     
     def process_document(self, file_path: str, file_extension: str) -> Tuple[Optional[str], Optional[str]]:
-        """Main processing function - same as before"""
+        """Main function to process any document type"""
         file_extension = file_extension.lower().replace('.', '')
         
         if file_extension == 'pdf':
@@ -303,7 +279,7 @@ class ImprovedDocumentProcessor:
             return None, f"Unsupported file type: {file_extension}"
     
     def get_text_quality_score(self, text: str) -> float:
-        """Same quality scoring as before"""
+        """Estimate OCR quality based on text characteristics"""
         if not text:
             return 0
         
@@ -329,7 +305,7 @@ class ImprovedDocumentProcessor:
         return min(round(base_quality, 2), 100)
     
     def extract_with_fallback(self, file_path: str, file_extension: str) -> Tuple[Optional[str], Optional[str], dict]:
-        """Extract with fallback - same as before"""
+        """Extract text with multiple fallback strategies"""
         metadata = {
             'method_used': None,
             'quality_score': 0,
@@ -355,7 +331,6 @@ class ImprovedDocumentProcessor:
                         metadata['method_used'] = 'fallback'
                         metadata['preprocessing'] = 'basic'
         
-        # Final cleanup
         self._clean_memory()
         
         return text, error, metadata
