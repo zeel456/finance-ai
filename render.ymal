@@ -1,56 +1,65 @@
-services:
-  - type: web
-    name: finance-app
-    env: docker
-    dockerfilePath: ./Dockerfile
-    region: singapore
-    plan: free
-    
-    healthCheckPath: /health
-    autoDeploy: true
-    
-    envVars:
-      - key: SECRET_KEY
-        generateValue: true
-      
-      - key: FLASK_ENV
-        value: production
-      
-      - key: DATABASE_URL
-        fromDatabase:
-          name: finance-db
-          property: connectionString
-      
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      
-      - key: MAX_CONTENT_LENGTH
-        value: "16777216"
-      
-      - key: UPLOAD_FOLDER
-        value: /app/uploads
-      
-      - key: ALLOWED_EXTENSIONS
-        value: pdf,png,jpg,jpeg,gif,bmp,tiff,webp
-      
-      - key: MALLOC_TRIM_THRESHOLD_
-        value: "100000"
-      
-      - key: MALLOC_MMAP_THRESHOLD_
-        value: "100000"
-      
-      - key: TRANSFORMERS_CACHE
-        value: /tmp/transformers_cache
-      
-      - key: SENTENCE_TRANSFORMERS_HOME
-        value: /tmp/sentence_transformers
-      
-      - key: SPACY_MODEL
-        value: en_core_web_sm
+FROM python:3.11-slim
 
-databases:
-  - name: finance-db
-    databaseName: finance_app
-    user: finance_user
-    plan: free
-    region: singapore
+# Environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    MALLOC_TRIM_THRESHOLD_=100000 \
+    MALLOC_MMAP_THRESHOLD_=100000 \
+    TRANSFORMERS_CACHE=/tmp/transformers_cache \
+    SENTENCE_TRANSFORMERS_HOME=/tmp/sentence_transformers
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    poppler-utils \
+    libmagic1 \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+WORKDIR /app
+
+# Copy and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Install spaCy model using the OFFICIAL method
+RUN python -m spacy download en_core_web_sm --direct
+
+# Pre-download sentence transformer
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
+# Copy app
+COPY . .
+
+# Create directories
+RUN mkdir -p uploads temp_files static/uploads /tmp/transformers_cache /tmp/sentence_transformers && \
+    chmod -R 755 uploads temp_files static
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app /tmp/transformers_cache /tmp/sentence_transformers
+
+USER appuser
+
+EXPOSE 10000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:10000/health', timeout=5)"
+
+CMD gunicorn app:app \
+    --bind 0.0.0.0:$PORT \
+    --workers 1 \
+    --threads 1 \
+    --worker-class sync \
+    --worker-tmp-dir /dev/shm \
+    --timeout 300 \
+    --graceful-timeout 30 \
+    --max-requests 50 \
+    --max-requests-jitter 10 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    --preload
