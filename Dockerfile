@@ -11,8 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_INDEX_URL=https://download.pytorch.org/whl/cpu \
     TRANSFORMERS_CACHE=/tmp/transformers_cache \
     SENTENCE_TRANSFORMERS_HOME=/tmp/sentence_transformers \
-    HF_HOME=/tmp/huggingface \
-    PATH="/home/appuser/.local/bin:$PATH"
+    HF_HOME=/tmp/huggingface
 
 # Install ONLY essential system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -80,8 +79,8 @@ USER appuser
 # Expose port
 EXPOSE 10000
 
-# Use shell form to properly expand $PORT variable
-CMD gunicorn app:app \
+# FIXED: Use python -m gunicorn to ensure it's found
+CMD python -m gunicorn app:app \
     --bind 0.0.0.0:${PORT:-10000} \
     --workers 1 \
     --threads 2 \
