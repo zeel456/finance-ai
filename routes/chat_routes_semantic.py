@@ -1,5 +1,5 @@
 """
-Updated Chat Routes with Semantic Chatbot (FIXED)
+Chat Routes with Semantic Chatbot - COMPLETE FIX
 Save as: routes/chat_routes_semantic.py
 """
 
@@ -91,7 +91,7 @@ def get_conversation(conversation_id):
 def create_conversation():
     """Create a new conversation"""
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         title = data.get('title', 'New Conversation')
         
         conversation = Conversation(
@@ -149,7 +149,8 @@ def delete_conversation(conversation_id):
 def send_message(conversation_id):
     """
     Send a message and get AI response using semantic understanding
-    ✅ FIXED: Better error handling for chatbot initialization failures
+    ✅ FIXED: JSON serialization error (set to list conversion)
+    ✅ FIXED: Better error handling
     """
     try:
         conversation = Conversation.query.filter_by(
@@ -236,14 +237,22 @@ def send_message(conversation_id):
         # 5. Commit all changes
         db.session.commit()
         
-        # 6. Return response
+        # 6. ✅ FIX: Convert sets to lists for JSON serialization
+        understanding = ai_response.get('understanding', {})
+        if understanding and 'context' in understanding:
+            context = understanding['context']
+            # Convert mentioned_entities from set to list
+            if 'mentioned_entities' in context and isinstance(context['mentioned_entities'], set):
+                context['mentioned_entities'] = list(context['mentioned_entities'])
+        
+        # 7. Return response
         return jsonify({
             'success': True,
             'user_message': user_message.to_dict(),
             'assistant_message': assistant_message.to_dict(),
             'data': ai_response.get('data'),
             'chart_type': ai_response.get('chart_type'),
-            'understanding': ai_response.get('understanding')
+            'understanding': understanding
         })
         
     except Exception as e:
@@ -380,15 +389,22 @@ def chatbot_status():
         
         bot = _semantic_bot
         
+        # Convert context for JSON serialization
+        context_json = {}
+        for k, v in bot.context.items():
+            if isinstance(v, set):
+                context_json[k] = list(v)
+            elif isinstance(v, (dict, list, int, float, bool, type(None), str)):
+                context_json[k] = v
+            else:
+                context_json[k] = str(v)
+        
         return jsonify({
             'success': True,
             'status': {
                 'model': 'SemanticChatbot',
                 'initialized': True,
-                'context': {
-                    k: str(v) if not isinstance(v, (dict, list, int, float, bool, type(None))) else v
-                    for k, v in bot.context.items()
-                },
+                'context': context_json,
                 'memory_size': len(bot.conversation_memory),
                 'cache_size': len(bot.embedding_cache)
             }
