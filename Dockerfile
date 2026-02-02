@@ -13,9 +13,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     # Reduce transformers cache
     TRANSFORMERS_CACHE=/tmp/transformers_cache \
     SENTENCE_TRANSFORMERS_HOME=/tmp/sentence_transformers \
-    HF_HOME=/tmp/huggingface \
-    # Ensure Python packages are in PATH
-    PATH="/home/appuser/.local/bin:$PATH"
+    HF_HOME=/tmp/huggingface
 
 # Install ONLY essential system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -33,21 +31,24 @@ WORKDIR /app
 # Copy requirements
 COPY requirements.txt .
 
-# CRITICAL: Install PyTorch CPU-only version (much smaller)
-# Install in specific order to minimize size
+# CRITICAL: Install packages in correct order
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    # Install gunicorn and gevent FIRST (critical for deployment)
+    pip install --no-cache-dir gunicorn==22.0.0 gevent==24.2.1 && \
     # Install PyTorch CPU-only (700MB instead of 2GB)
     pip install --no-cache-dir torch==2.3.1 --index-url https://download.pytorch.org/whl/cpu && \
-    # Install other ML packages - FIXED VERSION
+    # Install other ML packages
     pip install --no-cache-dir \
         sentence-transformers==2.7.0 \
         transformers==4.41.2 \
         spacy==3.7.5 && \
-    # Install remaining requirements (exclude torch, sentence-transformers, transformers, spacy)
+    # Install remaining requirements (exclude already installed packages)
     grep -v "torch==" requirements.txt | \
     grep -v "sentence-transformers==" | \
     grep -v "transformers==" | \
     grep -v "spacy==" | \
+    grep -v "gunicorn==" | \
+    grep -v "gevent==" | \
     pip install --no-cache-dir -r /dev/stdin && \
     # Download spaCy model (small version only)
     python -m spacy download en_core_web_sm --no-deps && \
@@ -83,20 +84,19 @@ USER appuser
 EXPOSE 10000
 
 # MEMORY-OPTIMIZED gunicorn for Railway
-# Use python -m to ensure gunicorn is found
-CMD python -m gunicorn app:app \
-    --bind 0.0.0.0:$PORT \
-    --workers 1 \
-    --threads 2 \
-    --worker-class gevent \
-    --worker-connections 500 \
-    --worker-tmp-dir /dev/shm \
-    --timeout 120 \
-    --graceful-timeout 30 \
-    --keep-alive 5 \
-    --max-requests 100 \
-    --max-requests-jitter 20 \
-    --access-logfile - \
-    --error-logfile - \
-    --log-level info \
-    --preload
+CMD ["gunicorn", "app:app", \
+    "--bind", "0.0.0.0:${PORT:-10000}", \
+    "--workers", "1", \
+    "--threads", "2", \
+    "--worker-class", "gevent", \
+    "--worker-connections", "500", \
+    "--worker-tmp-dir", "/dev/shm", \
+    "--timeout", "120", \
+    "--graceful-timeout", "30", \
+    "--keep-alive", "5", \
+    "--max-requests", "100", \
+    "--max-requests-jitter", "20", \
+    "--access-logfile", "-", \
+    "--error-logfile", "-", \
+    "--log-level", "info", \
+    "--preload"]
