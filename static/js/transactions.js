@@ -89,7 +89,7 @@ async function loadTransactions(page = 1) {
             page: page,
             per_page: 20
         });
-        
+         
         const categoryFilter = document.getElementById('filterCategory')?.value;
         const startDate = document.getElementById('filterStartDate')?.value;
         const endDate = document.getElementById('filterEndDate')?.value;
