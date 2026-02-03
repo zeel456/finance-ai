@@ -414,19 +414,36 @@ def get_document_details(doc_id):
         return jsonify({'error': str(e)}), 500
 
 # Document processing
-processor = DocumentProcessingWorkflow()
+processor = None
 
 @app.route('/api/process-document/<int:doc_id>', methods=['POST'])
 @login_required
 def process_document(doc_id):
+    global processor
+
     try:
+        # ✅ Lazy initialization (runs only on first request)
+        if processor is None:
+            processor = DocumentProcessingWorkflow()
+
         success, message = processor.process_document(doc_id)
+
         if success:
-            return jsonify({'success': True, 'message': message})
+            return jsonify({
+                'success': True,
+                'message': message
+            })
         else:
-            return jsonify({'success': False, 'error': message}), 400
+            return jsonify({
+                'success': False,
+                'error': message
+            }), 400
+
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/api/process-all-documents', methods=['POST'])
 @login_required
