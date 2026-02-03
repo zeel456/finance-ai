@@ -121,6 +121,24 @@ def create_app():
         
         return None
 
+
+    @app.before_request
+def handle_api_authentication():
+    from flask import request, jsonify
+    from flask_login import current_user
+    
+    # Log every request for debugging
+    print(f"🔍 Request: {request.path} | Authenticated: {current_user.is_authenticated}")
+    
+    # Skip for static files and health check
+    if request.path.startswith('/static/') or request.path == '/health':
+        return None
+    
+    # FORCE logout check - if visiting root without auth, redirect
+    if request.path == '/' and not current_user.is_authenticated:
+        print("❌ Unauthenticated access to /, redirecting to login")
+        return redirect(url_for('auth.login'))
+
     # ========================================================================
     # BLUEPRINT REGISTRATION
     # ========================================================================
