@@ -116,20 +116,6 @@ def create_app():
         return None
 
     # ========================================================================
-    # DATABASE INITIALIZATION
-    # ========================================================================
-    with app.app_context():
-        db.create_all()
-        print("✅ Database tables created/verified")
-
-        if Category.query.count() == 0:
-            for cat_data in DEFAULT_CATEGORIES:
-                category = Category(**cat_data)
-                db.session.add(category)
-            db.session.commit()
-            print("✅ Default categories created!")
-
-    # ========================================================================
     # BLUEPRINT REGISTRATION
     # ========================================================================
     app.register_blueprint(auth_bp)
