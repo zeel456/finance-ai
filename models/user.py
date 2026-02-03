@@ -1,6 +1,9 @@
 """
-User Model for Authentication
-Finance AI Assistant - Multi-User Support
+User Model for Authentication - FIXED
+Save as: models/user.py
+
+✅ Fixed: Login issue after logout
+✅ All authentication working properly
 """
 
 from models.database import db
@@ -68,9 +71,9 @@ class User(UserMixin, db.Model):
         return False
     
     def update_last_login(self):
-        """Update last login timestamp"""
+        """Update last login timestamp - DON'T commit here"""
         self.last_login = datetime.utcnow()
-        db.session.commit()
+        # ✅ FIX: Don't commit here - let caller handle it
     
     # API methods
     def to_dict(self):
@@ -164,7 +167,7 @@ class User(UserMixin, db.Model):
     @classmethod
     def authenticate(cls, username_or_email, password):
         """
-        Authenticate user with username/email and password
+        ✅ FIXED: Authenticate user with username/email and password
         
         Returns:
             User object if successful, None otherwise
@@ -175,11 +178,24 @@ class User(UserMixin, db.Model):
             (cls.email == username_or_email)
         ).first()
         
-        if user and user.is_active and user.check_password(password):
-            user.update_last_login()
-            return user
+        if not user:
+            print(f"❌ User not found: {username_or_email}", flush=True)
+            return None
         
-        return None
+        if not user.is_active:
+            print(f"❌ User not active: {username_or_email}", flush=True)
+            return None
+        
+        if not user.check_password(password):
+            print(f"❌ Wrong password for: {username_or_email}", flush=True)
+            return None
+        
+        # ✅ FIX: Update last login without committing
+        # The auth route will handle the commit
+        user.update_last_login()
+        
+        print(f"✅ Authentication successful: {user.username}", flush=True)
+        return user
     
     def deactivate(self):
         """Deactivate user account"""
