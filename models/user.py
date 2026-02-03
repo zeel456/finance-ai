@@ -1,83 +1,168 @@
 """
-User Model for Authentication - FIXED
+User Model for Authentication - PRODUCTION SAFE
 Save as: models/user.py
 
-✅ Fixed: Login issue after logout
-✅ All authentication working properly
+✅ Flask-Login compliant
+✅ No 500 errors
+✅ Railway / Gunicorn safe
 """
 
 from models.database import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from datetime import datetime
+from sqlalchemy import func
+
 
 class User(UserMixin, db.Model):
     """User model for authentication and multi-user support"""
+
     __tablename__ = 'users'
-    
+
+    # ======================================================================
+    # CORE FIELDS
+    # ======================================================================
     id = db.Column(db.Integer, primary_key=True)
-    
-    # Authentication
+
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    
-    # Profile information
+
+    # Profile
     full_name = db.Column(db.String(120))
-    profile_picture = db.Column(db.String(255))  # URL or path
-    
-    # Account settings
+    profile_picture = db.Column(db.String(255))
+
+    # Account flags
     is_active = db.Column(db.Boolean, default=True)
     is_admin = db.Column(db.Boolean, default=False)
-    
+
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     last_login = db.Column(db.DateTime)
-    
-    # Relationships
-    transactions = db.relationship('Transaction', backref='user', lazy='dynamic', 
-                                  foreign_keys='Transaction.user_id')
-    budgets = db.relationship('Budget', backref='user', lazy='dynamic',
-                            foreign_keys='Budget.user_id')
-    documents = db.relationship('Document', backref='user', lazy='dynamic',
-                              foreign_keys='Document.user_id')
-    
-    def __repr__(self):
-        return f'<User {self.username}>'
-    
-    # Password methods
-    def set_password(self, password):
-        """Hash and set password"""
-        self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        """Verify password"""
-        return check_password_hash(self.password_hash, password)
-    
-    # Flask-Login required methods
+
+    # ======================================================================
+    # RELATIONSHIPS
+    # ======================================================================
+    transactions = db.relationship(
+        'Transaction',
+        backref='user',
+        lazy='dynamic',
+        foreign_keys='Transaction.user_id'
+    )
+
+    budgets = db.relationship(
+        'Budget',
+        backref='user',
+        lazy='dynamic',
+        foreign_keys='Budget.user_id'
+    )
+
+    documents = db.relationship(
+        'Document',
+        backref='user',
+        lazy='dynamic',
+        foreign_keys='Document.user_id'
+    )
+
+    # ======================================================================
+    # FLASK-LOGIN (DO NOT OVERRIDE CORE PROPERTIES)
+    # ======================================================================
     def get_id(self):
-        """Return user ID as string"""
+        """Return user ID as string (Flask-Login requirement)"""
         return str(self.id)
-    
-    @property
-    def is_authenticated(self):
-        """Return True if user is authenticated"""
-        return True
-    
-    @property
-    def is_anonymous(self):
-        """Return False - users are not anonymous"""
-        return False
-    
+
+    # ⚠️ DO NOT define:
+    # - is_authenticated
+    # - is_anonymous
+    # - is_active
+    # UserMixin already provides them correctly
+
+    # ======================================================================
+    # PASSWORD METHODS
+    # ======================================================================
+    def set_password(self, password: str):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str) -> bool:
+        return check_password_hash(self.password_hash, password)
+
+    # ======================================================================
+    # AUTH HELPERS
+    # ======================================================================
     def update_last_login(self):
-        """Update last login timestamp - DON'T commit here"""
+        """Update last login timestamp (caller commits)"""
         self.last_login = datetime.utcnow()
-        # ✅ FIX: Don't commit here - let caller handle it
-    
-    # API methods
+
+    @classmethod
+    def authenticate(cls, username_or_email: str, password: str):
+        """
+        Authenticate user by username OR email
+
+        Returns:
+            User | None
+        """
+        user = cls.query.filter(
+            (cls.username == username_or_email) |
+            (cls.email == username_or_email)
+        ).first()
+
+        if not user:
+            print(f"❌ User not found: {username_or_email}", flush=True)
+            return None
+
+        if not user.is_active:
+            print(f"❌ User inactive: {username_or_email}", flush=True)
+            return None
+
+        if not user.check_password(password):
+            print(f"❌ Invalid password for: {username_or_email}", flush=True)
+            return None
+
+        user.update_last_login()
+        print(f"✅ Login successful: {user.username}", flush=True)
+        return user
+
+    @classmethod
+    def create_user(cls, username, email, password, full_name=None):
+        """Create a new user safely"""
+
+        if len(username) < 3:
+            return None, "Username must be at least 3 characters"
+
+        if cls.query.filter_by(username=username).first():
+            return None, "Username already exists"
+
+        if '@' not in email:
+            return None, "Invalid email address"
+
+        if cls.query.filter_by(email=email).first():
+            return None, "Email already registered"
+
+        if len(password) < 6:
+            return None, "Password must be at least 6 characters"
+
+        user = cls(
+            username=username,
+            email=email,
+            full_name=full_name or username
+        )
+        user.set_password(password)
+
+        try:
+            db.session.add(user)
+            db.session.commit()
+            return user, None
+        except Exception as e:
+            db.session.rollback()
+            return None, str(e)
+
+    # ======================================================================
+    # STATS / API
+    # ======================================================================
     def to_dict(self):
-        """Convert to dictionary for API responses"""
         return {
             'id': self.id,
             'username': self.username,
@@ -89,120 +174,43 @@ class User(UserMixin, db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_login': self.last_login.isoformat() if self.last_login else None
         }
-    
+
     def to_dict_public(self):
-        """Public profile info (no sensitive data)"""
         return {
             'id': self.id,
             'username': self.username,
             'full_name': self.full_name,
             'profile_picture': self.profile_picture
         }
-    
-    # Statistics
+
     def get_transaction_count(self):
-        """Get total transaction count for user"""
         return self.transactions.count()
-    
+
     def get_total_expenses(self):
-        """Get total expenses for user"""
-        from sqlalchemy import func
-        result = db.session.query(
-            func.sum(db.text('transactions.amount'))
+        total = db.session.query(
+            func.sum(func.coalesce(db.text("transactions.amount"), 0))
         ).filter(
-            db.text('transactions.user_id = :user_id')
-        ).params(user_id=self.id).scalar()
-        return float(result) if result else 0.0
-    
+            db.text("transactions.user_id = :uid")
+        ).params(uid=self.id).scalar()
+
+        return float(total or 0)
+
     def get_budget_count(self):
-        """Get budget count for user"""
         return self.budgets.count()
-    
+
     def get_document_count(self):
-        """Get document count for user"""
         return self.documents.count()
-    
-    @classmethod
-    def create_user(cls, username, email, password, full_name=None):
-        """
-        Create new user with validation
-        
-        Returns:
-            (User object, error message) - error is None if successful
-        """
-        # Validate username
-        if len(username) < 3:
-            return None, "Username must be at least 3 characters"
-        
-        if cls.query.filter_by(username=username).first():
-            return None, "Username already exists"
-        
-        # Validate email
-        if '@' not in email:
-            return None, "Invalid email address"
-        
-        if cls.query.filter_by(email=email).first():
-            return None, "Email already registered"
-        
-        # Validate password
-        if len(password) < 6:
-            return None, "Password must be at least 6 characters"
-        
-        # Create user
-        user = cls(
-            username=username,
-            email=email,
-            full_name=full_name or username
-        )
-        user.set_password(password)
-        
-        try:
-            db.session.add(user)
-            db.session.commit()
-            return user, None
-        except Exception as e:
-            db.session.rollback()
-            return None, f"Error creating user: {str(e)}"
-    
-    @classmethod
-    def authenticate(cls, username_or_email, password):
-        """
-        ✅ FIXED: Authenticate user with username/email and password
-        
-        Returns:
-            User object if successful, None otherwise
-        """
-        # Try to find by username or email
-        user = cls.query.filter(
-            (cls.username == username_or_email) | 
-            (cls.email == username_or_email)
-        ).first()
-        
-        if not user:
-            print(f"❌ User not found: {username_or_email}", flush=True)
-            return None
-        
-        if not user.is_active:
-            print(f"❌ User not active: {username_or_email}", flush=True)
-            return None
-        
-        if not user.check_password(password):
-            print(f"❌ Wrong password for: {username_or_email}", flush=True)
-            return None
-        
-        # ✅ FIX: Update last login without committing
-        # The auth route will handle the commit
-        user.update_last_login()
-        
-        print(f"✅ Authentication successful: {user.username}", flush=True)
-        return user
-    
+
+    # ======================================================================
+    # ADMIN ACTIONS
+    # ======================================================================
     def deactivate(self):
-        """Deactivate user account"""
         self.is_active = False
         db.session.commit()
-    
+
     def activate(self):
-        """Activate user account"""
         self.is_active = True
         db.session.commit()
+
+    def __repr__(self):
+        return f"<User {self.username}>"
