@@ -1,6 +1,7 @@
 """
 PRODUCTION-READY Flask Application
 Railway-optimized with lazy loading and no blocking startup operations
+✅ INCLUDES CHATBOT PRE-WARMING TO PREVENT TIMEOUT ERRORS
 """
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_from_directory
@@ -94,9 +95,17 @@ def create_app():
         from flask import request, jsonify
         from flask_login import current_user
         
+        # Log every request for debugging
+        print(f"🔍 Request: {request.path} | Authenticated: {current_user.is_authenticated}")
+        
         # Skip for static files and health check
         if request.path.startswith('/static/') or request.path == '/health':
             return None
+        
+        # FORCE logout check - if visiting root without auth, redirect
+        if request.path == '/' and not current_user.is_authenticated:
+            print("❌ Unauthenticated access to /, redirecting to login")
+            return redirect(url_for('auth.login'))
         
         # For API routes, return JSON error instead of redirect
         if request.path.startswith('/api/'):
@@ -121,24 +130,6 @@ def create_app():
         
         return None
 
-
-    @app.before_request
-    def handle_api_authentication():
-        from flask import request, jsonify
-        from flask_login import current_user
-        
-        # Log every request for debugging
-        print(f"🔍 Request: {request.path} | Authenticated: {current_user.is_authenticated}")
-        
-        # Skip for static files and health check
-        if request.path.startswith('/static/') or request.path == '/health':
-            return None
-        
-        # FORCE logout check - if visiting root without auth, redirect
-        if request.path == '/' and not current_user.is_authenticated:
-            print("❌ Unauthenticated access to /, redirecting to login")
-            return redirect(url_for('auth.login'))
-
     # ========================================================================
     # BLUEPRINT REGISTRATION
     # ========================================================================
@@ -149,6 +140,50 @@ def create_app():
     app.register_blueprint(insights_bp)
     app.register_blueprint(notification_bp)
     app.register_blueprint(hdfc_bp)
+
+    # ========================================================================
+    # ✅ CHATBOT PRE-WARMING - SOLVES 52-SECOND TIMEOUT ISSUE
+    # ========================================================================
+    def prewarm_chatbot():
+        """
+        Pre-load chatbot models in background thread.
+        This prevents the 52-second timeout on first chat message.
+        """
+        import time
+        time.sleep(10)  # Wait for app to fully start
+        
+        try:
+            print("=" * 70, flush=True)
+            print("🔥 PRE-WARMING CHATBOT MODELS...", flush=True)
+            print("=" * 70, flush=True)
+            
+            # Import and initialize the chatbot
+            from routes.chat_routes_semantic import get_semantic_bot
+            bot = get_semantic_bot()
+            
+            print("=" * 70, flush=True)
+            print("✅ CHATBOT PRE-WARMED AND READY!", flush=True)
+            print("   Chat messages will now respond instantly", flush=True)
+            print("=" * 70, flush=True)
+            
+            # Force garbage collection after loading heavy models
+            import gc
+            gc.collect()
+            
+        except Exception as e:
+            print("=" * 70, flush=True)
+            print("⚠️ CHATBOT PRE-WARMING FAILED", flush=True)
+            print(f"   Error: {e}", flush=True)
+            print("   Chatbot will initialize on first use instead", flush=True)
+            print("=" * 70, flush=True)
+            import traceback
+            traceback.print_exc()
+    
+    # Start background pre-warming thread
+    import threading
+    prewarm_thread = threading.Thread(target=prewarm_chatbot, daemon=True)
+    prewarm_thread.start()
+    print("🚀 Background chatbot pre-warming started...", flush=True)
 
     return app
 
