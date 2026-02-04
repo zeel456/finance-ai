@@ -28,7 +28,7 @@
             <li class="nav-user">
                 <div class="user-menu">
                     <span class="user-name">{{ current_user.full_name or current_user.username }}</span>
-                    <a href="/logout" class="logout-btn" onclick="event.preventDefault(); logout();">Logout</a>
+                    <a href="/logout" class="logout-btn">Logout</a>
                 </div>
             </li>
         </ul>
@@ -298,40 +298,6 @@
             .catch(error => console.error('Error loading notification count:', error));
     }
 
-    // ✅ FIXED: Proper logout function
-    function logout() {
-        // Show loading state
-        const logoutBtn = document.querySelector('.logout-btn');
-        const originalText = logoutBtn.textContent;
-        logoutBtn.textContent = 'Logging out...';
-        logoutBtn.style.pointerEvents = 'none';
-        
-        // Perform logout
-        fetch('/logout', {
-            method: 'GET',
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            // Force redirect to login page
-            window.location.href = '/login';
-        })
-        .catch(error => {
-            console.error('Logout error:', error);
-            // Still redirect even if error
-            window.location.href = '/login';
-        });
-        
-        // Backup timeout
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 1000);
-    }
-
     // Refresh notification count every 30 seconds
     setInterval(loadNotificationCount, 30000);
 </script>
-
-
-
-
-
