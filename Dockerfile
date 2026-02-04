@@ -54,4 +54,15 @@ USER appuser
 EXPOSE 10000
 
 # Start with gunicorn - use shell form to expand $PORT
-CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --worker-class gevent --timeout 120 --access-logfile - --error-logfile -
+# Replace the last line in your Dockerfile with:
+CMD gunicorn app:app \
+    --bind 0.0.0.0:$PORT \
+    --workers 1 \
+    --threads 4 \
+    --worker-class gevent \
+    --timeout 300 \
+    --graceful-timeout 300 \
+    --keep-alive 5 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info
